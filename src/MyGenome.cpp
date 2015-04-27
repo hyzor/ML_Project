@@ -43,27 +43,36 @@ MyGenome::~MyGenome()
 
 void MyGenome::Init(GAGenome&)
 {
-
+	// TODO: Implement functionality
 }
 
-int Mutate(GAGenome&, float)
+int MyGenome::Mutate(GAGenome&, float)
 {
+	// TODO: Implement functionality
 
+	return -1;
 }
 
-float Compare(const GAGenome&, const GAGenome&)
+float MyGenome::Compare(const GAGenome&, const GAGenome&)
 {
+	// TODO: Implement functionality
 
+	return -1;
 }
 
-float Evaluate(GAGenome&)
+float MyGenome::Evaluate(GAGenome&)
 {
+	// TODO: Implement functionality
 
+	return -1;
 }
 
-int Cross(const GAGenome& _parent1, const GAGenome& _parent2,
+int MyGenome::Cross(const GAGenome& _parent1, const GAGenome& _parent2,
 	GAGenome* _result1, GAGenome* _result2)
 {
+	// TODO: Fix so that offsprings randomly inherit attributes etc
+	// from both parents
+
 	MyGenome& parent1 = (MyGenome&)_parent1;
 	MyGenome& parent2 = (MyGenome&)_parent2;
 
