@@ -11,7 +11,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\ex9.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\MyEntity.cpp" />
+    <ClCompile Include="src\MyGA.cpp" />
+    <ClCompile Include="src\MyGenome.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\MyEntity.h" />
+    <ClInclude Include="src\MyGA.h" />
+    <ClInclude Include="src\MyGenome.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{54EBE271-1DE1-4BED-BC8B-2F427327E451}</ProjectGuid>
