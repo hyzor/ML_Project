@@ -15,11 +15,14 @@
     <ClCompile Include="src\MyEntity.cpp" />
     <ClCompile Include="src\MyGA.cpp" />
     <ClCompile Include="src\MyGenome.cpp" />
+    <ClCompile Include="src\SDL_Wrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Common.h" />
     <ClInclude Include="src\MyEntity.h" />
     <ClInclude Include="src\MyGA.h" />
     <ClInclude Include="src\MyGenome.h" />
+    <ClInclude Include="src\SDL_Wrapper.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{54EBE271-1DE1-4BED-BC8B-2F427327E451}</ProjectGuid>
@@ -50,8 +53,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>External\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>External\Lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>External\include;$(IncludePath)</IncludePath>
+    <LibraryPath>External\lib\x86;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(PlatformTarget)\</OutDir>
     <TargetName>$(ProjectName)_d</TargetName>
     <IntDir>$(SolutionDir)build\$(PlatformTarget)\$(Configuration)\</IntDir>
@@ -64,7 +67,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ga_d.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ga_d.lib;SDL2.lib;SDL2main.lib;Box2D_d.lib;SDL2_image.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
     <PostBuildEvent>
