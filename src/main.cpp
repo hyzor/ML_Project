@@ -143,7 +143,9 @@ int main(int argc, char **argv)
 	int box2D_positionIterations = 2;
 
 	// Entity
-	MyEntity* myShip = new MyEntity(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, ENTITY_INIT_WIDTH, ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, *gfx_entity, &box2D_world);
+	MyEntity* myShip = new MyEntity(0, WINDOW_HEIGHT / 2, ENTITY_INIT_WIDTH, ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, *gfx_entity, &box2D_world);
+
+	vec2 curMouseClickPos;
 
 	// See if we've been given a seed to use (for testing purposes).  When you
 	// specify a random seed, the evolution will be exactly the same each time
@@ -206,6 +208,10 @@ int main(int argc, char **argv)
 	{
 		while (SDL_PollEvent(&sdlEvent) != 0)
 		{
+			if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+				SDL_GetMouseState(&curMouseClickPos.x, &curMouseClickPos.y);
+			}
+
 			if (sdlEvent.type == SDL_QUIT)
 			{
 				gameIsRunning = false;
@@ -268,6 +274,8 @@ int main(int argc, char **argv)
 		// Box2D step
 		box2D_world.Step(dt, box2D_velocityIterations, box2D_positionIterations);
 
+		myShip->MoveTo({ (float)curMouseClickPos.x, (float)curMouseClickPos.y }, 20.0f, dt);
+
 		// Game logic
 		myShip->Update(dt);
 
@@ -279,9 +287,29 @@ int main(int argc, char **argv)
 
 		myShip->Draw(renderer);
 
-		if (gfx_text_debug->CreateFromText("Angle: " + std::to_string(myShip->GetAngle_Degrees()), { 255, 255, 255 }, font, renderer))
+		if (gfx_text_debug->CreateFromText("Angle: " + std::to_string(fmod(myShip->GetAngle_Degrees(), 360.0f)), { 255, 255, 255 }, font, renderer))
 		{
 			gfx_text_debug->Render(0, 0, renderer);
+		}
+
+		if (gfx_text_debug->CreateFromText("PosX: " + std::to_string(myShip->Getb2Body()->GetPosition().x), { 255, 255, 255 }, font, renderer))
+		{
+			gfx_text_debug->Render(0, 15, renderer);
+		}
+
+		if (gfx_text_debug->CreateFromText("PosY: " + std::to_string(myShip->Getb2Body()->GetPosition().y), { 255, 255, 255 }, font, renderer))
+		{
+			gfx_text_debug->Render(0, 30, renderer);
+		}
+
+		if (gfx_text_debug->CreateFromText("VelX: " + std::to_string(myShip->Getb2Body()->GetLinearVelocity().x), { 255, 255, 255 }, font, renderer))
+		{
+			gfx_text_debug->Render(0, 45, renderer);
+		}
+
+		if (gfx_text_debug->CreateFromText("VelY: " + std::to_string(myShip->Getb2Body()->GetLinearVelocity().y), { 255, 255, 255 }, font, renderer))
+		{
+			gfx_text_debug->Render(0, 60, renderer);
 		}
 
 		SDL_RenderPresent(renderer);

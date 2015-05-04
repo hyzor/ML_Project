@@ -13,6 +13,8 @@ MyEntity::MyEntity()
 	mHeight = 0;
 	mSdlRect = new SDL_Rect();
 	mb2Body = NULL;
+
+	mTorque = 4000000.0f;
 }
 
 MyEntity::MyEntity(float xPos, float yPos, int width, int height, int hp, int dmg, SDL_Wrapper::Texture& texture, b2World* world)
@@ -36,7 +38,7 @@ MyEntity::MyEntity(float xPos, float yPos, int width, int height, int hp, int dm
 
 	b2FixtureDef fixtureDef;
 	fixtureDef.shape = &dynamicBox;
-	fixtureDef.density = 0.1f;
+	fixtureDef.density = 0.01f;
 	fixtureDef.friction = 0.0f;
 
 	mb2Body->CreateFixture(&fixtureDef);
@@ -45,9 +47,8 @@ MyEntity::MyEntity(float xPos, float yPos, int width, int height, int hp, int dm
 void MyEntity::Update(float dt)
 {
 	b2Vec2 forceDirection = mb2Body->GetWorldVector(b2Vec2(0, 1));
-	float magnitude = 400000.0f;
+	float magnitude = 40000.0f;
 	forceDirection *= magnitude;
-	float torque = 7000000.0f;
 
 	if (mEventTriggers[Events::THRUST_FORWARD])
 	{
@@ -61,12 +62,12 @@ void MyEntity::Update(float dt)
 
 	if (mEventTriggers[Events::TORQUE_LEFT])
 	{
-		mb2Body->ApplyTorque(-torque, true);
+		mb2Body->ApplyTorque(-mTorque, true);
 	}
 
 	if (mEventTriggers[Events::TORQUE_RIGHT])
 	{
-		mb2Body->ApplyTorque(torque, true);
+		mb2Body->ApplyTorque(mTorque, true);
 	}
 
 	if (mEventTriggers[Events::SHOOT])
@@ -112,4 +113,53 @@ MyEntity::~MyEntity()
 void MyEntity::ActivateEventTrigger(Events movement, bool activate)
 {
 	mEventTriggers[movement] = activate;
+}
+
+void MyEntity::RotateTo(b2Vec2 point, float degreesPerStep)
+{
+	b2Vec2 toTarget = point - mb2Body->GetPosition();
+	float desiredAngle = atan2f(-toTarget.x, toTarget.y);
+	float totalRotation = desiredAngle - mb2Body->GetAngle();
+	float newAngle = mb2Body->GetAngle() + std::min(degreesPerStep, std::max(-degreesPerStep, totalRotation));
+	mb2Body->SetTransform(mb2Body->GetPosition(), newAngle);
+}
+
+void MyEntity::RotateTo_Torque(b2Vec2 point, float dt)
+{
+	float bodyAngle = mb2Body->GetAngle();
+
+	b2Vec2 toTarget = point - mb2Body->GetPosition();
+	float desiredAngle = atan2f(toTarget.x, -toTarget.y);
+
+	float nextAngle = bodyAngle + mb2Body->GetAngularVelocity() / 6.0f;
+	float totalRotation = desiredAngle - nextAngle;
+
+	while (totalRotation < MathHelper::DegreesToRadians(-180)) totalRotation += MathHelper::DegreesToRadians(360);
+	while (totalRotation > MathHelper::DegreesToRadians(180)) totalRotation -= MathHelper::DegreesToRadians(360);
+
+	float desiredAngularVelocity = totalRotation * 60.0f;
+	float torque = mb2Body->GetInertia() * desiredAngularVelocity / (dt);
+	mb2Body->ApplyTorque(totalRotation < 0 ? -mTorque : mTorque, true);
+}
+
+void MyEntity::MoveTo(b2Vec2 point, float radius, float dt)
+{
+	b2Vec2 pos = mb2Body->GetPosition();
+	float dist = sqrt(std::pow(point.x - pos.x, 2) + std::pow(point.y - pos.y, 2));
+
+	if (dist <= radius)
+	{
+		ActivateEventTrigger(Events::THRUST_FORWARD, false);
+		//ActivateEventTrigger(Events::THRUST_BACKWARD, true);
+
+		b2Vec2 velocity = mb2Body->GetLinearVelocity();
+
+		mb2Body->SetLinearDamping(5.0f);
+		mb2Body->SetAngularDamping(5.0f);
+	}
+	else
+	{
+		ActivateEventTrigger(Events::THRUST_FORWARD, true);
+		RotateTo_Torque(point, dt);
+	}
 }

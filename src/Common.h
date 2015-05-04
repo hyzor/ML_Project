@@ -12,6 +12,23 @@ struct vec2f
 	float x, y;
 };
 
+struct vec2
+{
+	vec2()
+	{
+		x = 0;
+		y = 0;
+	}
+
+	vec2(int _x, int _y)
+	{
+		this->x = _x;
+		this->y = _y;
+	}
+
+	int x, y;
+};
+
 namespace MathHelper
 {
 	static const float PI = 3.14159265359f;
