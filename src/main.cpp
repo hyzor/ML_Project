@@ -27,6 +27,7 @@ decimal genome.
 #include "Ship.h"
 #include "SDL_Wrapper.h"
 #include "World.h"
+#include "TextureManager.h"
 
 // Directories
 static const std::string dir_assets = "assets/";
@@ -79,6 +80,8 @@ int main(int argc, char **argv)
 	SDL_Wrapper::Texture* gfx_text_debug = nullptr;
 	SDL_Wrapper::Texture* gfx_projectile = nullptr;
 
+	TextureManager* textureManager = nullptr;
+
 	// Fonts
 	TTF_Font* font;
 
@@ -128,6 +131,7 @@ int main(int argc, char **argv)
 
 	//background = SDL_Wrapper::LoadSurface(dir_assets + "Background.bmp", screenSurface);
 	//gfx_entity = SDL_Wrapper::LoadSurface(dir_assets + "Ship.bmp", screenSurface);
+	/*
 	gfx_ship = new SDL_Wrapper::Texture();
 	gfx_ship->LoadFromFile(dir_assets + "Ship.png", renderer);
 
@@ -138,6 +142,17 @@ int main(int argc, char **argv)
 
 	gfx_projectile = new SDL_Wrapper::Texture();
 	gfx_projectile->LoadFromFile(dir_assets + "Projectile.png", renderer);
+	*/
+
+	textureManager = TextureManager::GetInstance();
+	textureManager->Init(renderer, dir_assets);
+
+	gfx_text_debug = new SDL_Wrapper::Texture();
+
+	//textureManager->LoadTexture("Ship.png");
+	gfx_background = TextureManager::GetInstance()->LoadTexture("Background.png");
+	//textureManager->LoadTexture("Projectile.png");
+
 
 	// Game variables
 	float dt = 1.0f / 60.0f;
@@ -155,7 +170,8 @@ int main(int argc, char **argv)
 	// Entity
 	//Ship* myShip = new Ship(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, ENTITY_INIT_WIDTH, ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, gfx_entity, &box2D_world);
 
-	Ship* myShip = world->SpawnEntity<Ship>(WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT / 2.0f, ENTITY_INIT_WIDTH, ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, 0.0f, gfx_ship);
+	Ship* myShip = world->SpawnEntity<Ship>(WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT / 2.0f, ENTITY_INIT_WIDTH,
+		ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, 0.0f, textureManager->LoadTexture("Ship.png"));
 
 	vec2 curMouseClickPos;
 
@@ -336,16 +352,17 @@ int main(int argc, char **argv)
 	}
 
 	World::Destroy();
+	TextureManager::Destroy();
 
 	// Free SDL stuff
-	delete gfx_background;
+	//delete gfx_background;
 	gfx_background = nullptr;
-	delete gfx_ship;
-	gfx_ship = nullptr;
+	//delete gfx_ship;
+	//gfx_ship = nullptr;
 	delete gfx_text_debug;
 	gfx_text_debug = nullptr;
-	delete gfx_projectile;
-	gfx_projectile = nullptr;
+	//delete gfx_projectile;
+	//gfx_projectile = nullptr;
 
 	TTF_CloseFont(font);
 	font = nullptr;

@@ -6,6 +6,7 @@
 #include "Entity.h"
 #include "Projectile.h"
 #include "World.h"
+#include "TextureManager.h"
 
 class Ship : public Entity
 {

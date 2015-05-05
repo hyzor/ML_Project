@@ -118,7 +118,8 @@ bool Ship::Shoot()
 	if (mCurCooldown <= 0.0f)
 	{
 		// Spawn new projectile
-		Projectile* newProjectile = World::GetInstance()->SpawnEntity<Projectile>(GetPosition().x, GetPosition().y, 4, 4, 1, 1, GetAngle(true), mTexture);
+		Projectile* newProjectile = World::GetInstance()->SpawnEntity<Projectile>(GetPosition().x+(mHeight*0.5f)*std::cos(GetAngle(true)),
+			GetPosition().y+(mHeight*0.5f)*std::sin(GetAngle(true)), 4, 4, 1, 1, GetAngle(true), TextureManager::GetInstance()->LoadTexture("Projectile.png"));
 		//newProjectile->Init()
 		mCurCooldown = mCooldown;
 

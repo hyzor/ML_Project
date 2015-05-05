@@ -11,6 +11,7 @@ Projectile::Projectile(float x, float y, int width, int height, int health, int 
 	: Entity(x, y, width, height, health, damage, initAngle, texture, world)
 {
 	mInitAngle = initAngle;
+	mb2Body->SetBullet(true);
 
 	//mb2Body->SetLinearVelocity(initVel);
 }
@@ -32,4 +33,7 @@ void Projectile::Update(float dt)
 	b2Vec2 forceDirection = mb2Body->GetWorldVector(b2Vec2(0, 1));
 	forceDirection *= 40000.0f;
 	mb2Body->ApplyForce(-forceDirection, mb2Body->GetWorldCenter(), true);
+
+	//b2Vec2 force = b2Vec2(-(std::cos(mb2Body->GetAngle() - 4.7f)*40000.0f), -(std::sin(mb2Body->GetAngle() - 4.7f)*40000.0f));
+	//mb2Body->ApplyLinearImpulse(force, mb2Body->GetPosition(), true);
 }

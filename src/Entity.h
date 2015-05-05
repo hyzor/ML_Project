@@ -30,6 +30,8 @@ protected:
 	SDL_Wrapper::Texture* mTexture;
 	b2Body* mb2Body;
 
+	b2Vec2 mLocalVec;
+
 	float mSpawnPosX, mSpawnPosY;
 	int mWidth, mHeight;
 	int mHealth;

@@ -18,6 +18,7 @@
     <ClCompile Include="src\MyGenome.cpp" />
     <ClCompile Include="src\Projectile.cpp" />
     <ClCompile Include="src\SDL_Wrapper.cpp" />
+    <ClCompile Include="src\TextureManager.cpp" />
     <ClCompile Include="src\World.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -28,6 +29,7 @@
     <ClInclude Include="src\MyGenome.h" />
     <ClInclude Include="src\Projectile.h" />
     <ClInclude Include="src\SDL_Wrapper.h" />
+    <ClInclude Include="src\TextureManager.h" />
     <ClInclude Include="src\World.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

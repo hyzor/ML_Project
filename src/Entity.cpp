@@ -13,6 +13,8 @@ Entity::Entity()
 	mb2Body = nullptr;
 	mDamage = 0;
 	mIsAlive = true;
+
+	mLocalVec = { 0.0f, 0.0f };
 }
 
 
