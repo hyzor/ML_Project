@@ -16,6 +16,7 @@ decimal genome.
 #include <fstream>
 #include <string>
 #include <cmath>
+#include <vector>
 
 #include <ga/ga.h>
 #include <SDL/SDL.h>
@@ -23,8 +24,9 @@ decimal genome.
 #include <Box2D/Box2D.h>
 
 #include "MyGA.h"
-#include "MyEntity.h"
+#include "Ship.h"
 #include "SDL_Wrapper.h"
+#include "World.h"
 
 // Directories
 static const std::string dir_assets = "assets/";
@@ -67,14 +69,15 @@ int main(int argc, char **argv)
 	bool gameIsRunning = true;
 
 	// SDL
-	SDL_Window* window = NULL;
+	SDL_Window* window = nullptr;
 	SDL_Event sdlEvent;
-	SDL_Renderer* renderer = NULL;
+	SDL_Renderer* renderer = nullptr;
 
 	// Textures
-	SDL_Wrapper::Texture* gfx_entity = NULL;
-	SDL_Wrapper::Texture* gfx_background = NULL;
-	SDL_Wrapper::Texture* gfx_text_debug = NULL;
+	SDL_Wrapper::Texture* gfx_ship = nullptr;
+	SDL_Wrapper::Texture* gfx_background = nullptr;
+	SDL_Wrapper::Texture* gfx_text_debug = nullptr;
+	SDL_Wrapper::Texture* gfx_projectile = nullptr;
 
 	// Fonts
 	TTF_Font* font;
@@ -125,13 +128,16 @@ int main(int argc, char **argv)
 
 	//background = SDL_Wrapper::LoadSurface(dir_assets + "Background.bmp", screenSurface);
 	//gfx_entity = SDL_Wrapper::LoadSurface(dir_assets + "Ship.bmp", screenSurface);
-	gfx_entity = new SDL_Wrapper::Texture();
-	gfx_entity->LoadFromFile(dir_assets + "Ship.bmp", renderer);
+	gfx_ship = new SDL_Wrapper::Texture();
+	gfx_ship->LoadFromFile(dir_assets + "Ship.png", renderer);
 
 	gfx_background = new SDL_Wrapper::Texture();
-	gfx_background->LoadFromFile(dir_assets + "Background.bmp", renderer);
+	gfx_background->LoadFromFile(dir_assets + "Background.png", renderer);
 
 	gfx_text_debug = new SDL_Wrapper::Texture();
+
+	gfx_projectile = new SDL_Wrapper::Texture();
+	gfx_projectile->LoadFromFile(dir_assets + "Projectile.png", renderer);
 
 	// Game variables
 	float dt = 1.0f / 60.0f;
@@ -142,8 +148,14 @@ int main(int argc, char **argv)
 	int box2D_velocityIterations = 6;
 	int box2D_positionIterations = 2;
 
+	// World
+	World* world = World::GetInstance();
+	world->Init(&box2D_world);
+
 	// Entity
-	MyEntity* myShip = new MyEntity(0, WINDOW_HEIGHT / 2, ENTITY_INIT_WIDTH, ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, *gfx_entity, &box2D_world);
+	//Ship* myShip = new Ship(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, ENTITY_INIT_WIDTH, ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, gfx_entity, &box2D_world);
+
+	Ship* myShip = world->SpawnEntity<Ship>(WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT / 2.0f, ENTITY_INIT_WIDTH, ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, 0.0f, gfx_ship);
 
 	vec2 curMouseClickPos;
 
@@ -208,7 +220,8 @@ int main(int argc, char **argv)
 	{
 		while (SDL_PollEvent(&sdlEvent) != 0)
 		{
-			if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+			if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) 
+			{
 				SDL_GetMouseState(&curMouseClickPos.x, &curMouseClickPos.y);
 			}
 
@@ -222,25 +235,27 @@ int main(int argc, char **argv)
 				{
 				case SDLK_w:
 					std::cout << "Key event: 'w' pressed\n";
-					myShip->ActivateEventTrigger(MyEntity::THRUST_FORWARD, true);
+					myShip->ActivateEventTrigger(Ship::THRUST_FORWARD, true);
 					break;
 				case SDLK_s:
 					std::cout << "Key event: 's' pressed\n";
-					myShip->ActivateEventTrigger(MyEntity::THRUST_BACKWARD, true);
+					myShip->ActivateEventTrigger(Ship::THRUST_BACKWARD, true);
 					break;
 				case SDLK_a:
 					std::cout << "Key event: 'a' pressed\n";
-					myShip->ActivateEventTrigger(MyEntity::TORQUE_LEFT, true);
+					myShip->ActivateEventTrigger(Ship::TORQUE_LEFT, true);
 					break;
 				case SDLK_d:
 					std::cout << "Key event: 'd' pressed\n";
-					myShip->ActivateEventTrigger(MyEntity::TORQUE_RIGHT, true);
+					myShip->ActivateEventTrigger(Ship::TORQUE_RIGHT, true);
 					break;
 				case SDLK_r:
 					std::cout << "Key event: 'r' pressed\n";
-					myShip->Getb2Body()->SetTransform(b2Vec2(WINDOW_WIDTH/2, WINDOW_HEIGHT/2), 0.0f);
-					myShip->Getb2Body()->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
-					myShip->Getb2Body()->SetAngularVelocity(0.0f);
+					myShip->Reset();
+					break;
+				case SDLK_SPACE:
+					std::cout << "Key event: 'space' pressed\n";
+					myShip->ActivateEventTrigger(Ship::SHOOT, true);
 					break;
 				case SDLK_ESCAPE:
 					gameIsRunning = false;
@@ -253,31 +268,35 @@ int main(int argc, char **argv)
 				{
 					case SDLK_w:
 						std::cout << "Key event: 'w' released\n";
-						myShip->ActivateEventTrigger(MyEntity::THRUST_FORWARD, false);
+						myShip->ActivateEventTrigger(Ship::THRUST_FORWARD, false);
 						break;
 					case SDLK_s:
 						std::cout << "Key event: 's' released\n";
-						myShip->ActivateEventTrigger(MyEntity::THRUST_BACKWARD, false);
+						myShip->ActivateEventTrigger(Ship::THRUST_BACKWARD, false);
 						break;
 					case SDLK_a:
 						std::cout << "Key event: 'a' released\n";
-						myShip->ActivateEventTrigger(MyEntity::TORQUE_LEFT, false);
+						myShip->ActivateEventTrigger(Ship::TORQUE_LEFT, false);
 						break;
 					case SDLK_d:
 						std::cout << "Key event: 'd' released\n";
-						myShip->ActivateEventTrigger(MyEntity::TORQUE_RIGHT, false);
+						myShip->ActivateEventTrigger(Ship::TORQUE_RIGHT, false);
+						break;
+					case SDLK_SPACE:
+						std::cout << "Key event: 'space' released\n";
+						myShip->ActivateEventTrigger(Ship::SHOOT, false);
 						break;
 				}
 			}
 		}
 
-		// Box2D step
+		// Box2D world step
 		box2D_world.Step(dt, box2D_velocityIterations, box2D_positionIterations);
 
+		// Update game logic
 		myShip->MoveTo({ (float)curMouseClickPos.x, (float)curMouseClickPos.y }, 20.0f, dt);
 
-		// Game logic
-		myShip->Update(dt);
+		world->Update(dt);
 
 		// Render world
 		SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
@@ -285,29 +304,30 @@ int main(int argc, char **argv)
 
 		gfx_background->Render(0, 0, renderer);
 
-		myShip->Draw(renderer);
+		world->Draw(renderer);
 
-		if (gfx_text_debug->CreateFromText("Angle: " + std::to_string(fmod(myShip->GetAngle_Degrees(), 360.0f)), { 255, 255, 255 }, font, renderer))
+		// Debug text
+		if (gfx_text_debug->CreateFromText("Angle: " + std::to_string(fmod(myShip->GetAngle(false), 360.0f)), { 255, 255, 255 }, font, renderer))
 		{
 			gfx_text_debug->Render(0, 0, renderer);
 		}
 
-		if (gfx_text_debug->CreateFromText("PosX: " + std::to_string(myShip->Getb2Body()->GetPosition().x), { 255, 255, 255 }, font, renderer))
+		if (gfx_text_debug->CreateFromText("PosX: " + std::to_string(myShip->GetPosition().x), { 255, 255, 255 }, font, renderer))
 		{
 			gfx_text_debug->Render(0, 15, renderer);
 		}
 
-		if (gfx_text_debug->CreateFromText("PosY: " + std::to_string(myShip->Getb2Body()->GetPosition().y), { 255, 255, 255 }, font, renderer))
+		if (gfx_text_debug->CreateFromText("PosY: " + std::to_string(myShip->GetPosition().y), { 255, 255, 255 }, font, renderer))
 		{
 			gfx_text_debug->Render(0, 30, renderer);
 		}
 
-		if (gfx_text_debug->CreateFromText("VelX: " + std::to_string(myShip->Getb2Body()->GetLinearVelocity().x), { 255, 255, 255 }, font, renderer))
+		if (gfx_text_debug->CreateFromText("VelX: " + std::to_string(myShip->GetLinearVelocity().x), { 255, 255, 255 }, font, renderer))
 		{
 			gfx_text_debug->Render(0, 45, renderer);
 		}
 
-		if (gfx_text_debug->CreateFromText("VelY: " + std::to_string(myShip->Getb2Body()->GetLinearVelocity().y), { 255, 255, 255 }, font, renderer))
+		if (gfx_text_debug->CreateFromText("VelY: " + std::to_string(myShip->GetLinearVelocity().y), { 255, 255, 255 }, font, renderer))
 		{
 			gfx_text_debug->Render(0, 60, renderer);
 		}
@@ -315,26 +335,26 @@ int main(int argc, char **argv)
 		SDL_RenderPresent(renderer);
 	}
 
-	//std::cin.get();
-
-	if (myShip)
-		delete myShip;
-	myShip = NULL;
+	World::Destroy();
 
 	// Free SDL stuff
 	delete gfx_background;
-	gfx_background = NULL;
-	delete gfx_entity;
-	gfx_entity = NULL;
+	gfx_background = nullptr;
+	delete gfx_ship;
+	gfx_ship = nullptr;
+	delete gfx_text_debug;
+	gfx_text_debug = nullptr;
+	delete gfx_projectile;
+	gfx_projectile = nullptr;
 
 	TTF_CloseFont(font);
-	font = NULL;
+	font = nullptr;
 
 	SDL_DestroyWindow(window);
-	window = NULL;
+	window = nullptr;
 
 	SDL_DestroyRenderer(renderer);
-	renderer = NULL;
+	renderer = nullptr;
 
 	TTF_Quit();
 	IMG_Quit();

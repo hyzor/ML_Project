@@ -24,10 +24,19 @@
     <ClCompile Include="src\MyGenome.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\MyEntity.cpp">
+    <ClCompile Include="src\SDL_Wrapper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\SDL_Wrapper.cpp">
+    <ClCompile Include="src\Projectile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Entity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Ship.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,13 +47,22 @@
     <ClInclude Include="src\MyGenome.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\MyEntity.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\SDL_Wrapper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Projectile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Entity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Ship.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

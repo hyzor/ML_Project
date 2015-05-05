@@ -3,13 +3,11 @@
 
 #include <cmath>
 
-#include <SDL/SDL.h>
-#include <Box2D/Box2D.h>
+#include "Entity.h"
+#include "Projectile.h"
+#include "World.h"
 
-#include "SDL_Wrapper.h"
-#include "Common.h"
-
-class MyEntity
+class Ship : public Entity
 {
 public:
 	static enum Attributes
@@ -31,41 +29,30 @@ public:
 	};
 
 public:
-	MyEntity();
-	MyEntity(float xPos, float yPos, int width, int height, int hp, int dmg, SDL_Wrapper::Texture& texture, b2World* world);
-	~MyEntity();
+	Ship();
+	Ship(float x, float y, int width, int height, int health, int damage, float angle, SDL_Wrapper::Texture* texture, b2World* world);
+	~Ship();
 
 	void ActivateEventTrigger(Events event, bool activate);
 
 	void Update(float dt);
-	void Draw(SDL_Renderer* renderer);
-
-	b2Body* Getb2Body() const;
-	float GetAngle() const;
-	float GetAngle_Degrees() const;
 
 	void RotateTo(b2Vec2 point, float degreesPerStep);
 	void RotateTo_Torque(b2Vec2 point, float dt);
 
 	void MoveTo(b2Vec2 point, float radius, float dt);
 
-protected:
-	float mVelocity;
-	int mHealth;
-	float mPosX, mPosY;
-	float mAngle;
-	int mDmg;
-	int mWidth, mHeight;
-
+private:
 	float mTorque;
 	float mMagnitude;
 
-private:
-	SDL_Rect* mSdlRect;
-	SDL_Wrapper::Texture* mTexture;
-	b2Body* mb2Body;
+	float mCooldown;
+	float mCurCooldown;
 
 	bool mEventTriggers[Events::NUM_EVENTS];
+
+	void Init();
+	bool Shoot();
 };
 
 #endif

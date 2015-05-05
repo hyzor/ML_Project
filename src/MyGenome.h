@@ -2,11 +2,11 @@
 #define MYGENOME_H_
 
 #include <ga/GAGenome.h>
-#include "MyEntity.h"
+#include "Ship.h"
 
 // Custom genome class which is derived from a custom entity class
 // and the default GAGenome class
-class MyGenome : public MyEntity, public GAGenome
+class MyGenome : public Ship, public GAGenome
 {
 	// Default genome functions/operators definitions
 public:
