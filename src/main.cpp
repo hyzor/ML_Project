@@ -28,6 +28,13 @@ decimal genome.
 #include "SDL_Wrapper.h"
 #include "World.h"
 #include "TextureManager.h"
+#include "DebugDraw.h"
+
+/*
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+*/
 
 // Directories
 static const std::string dir_assets = "assets/";
@@ -50,8 +57,8 @@ static const std::string dir_fonts = dir_assets + "fonts/";
 #define ENTITY_INIT_HP 5
 #define ENTITY_INIT_DMG 1
 #define ENTITY_INIT_SHOOTFREQ 0.1
-#define ENTITY_INIT_WIDTH 32
-#define ENTITY_INIT_HEIGHT 48
+#define ENTITY_INIT_WIDTH 48
+#define ENTITY_INIT_HEIGHT 64
 
 int MyCrossoverFunc(const GAGenome& genome1, const GAGenome& genome2, GAGenome* result);
 float MyObjectiveFunc(GAGenome &);
@@ -81,6 +88,7 @@ int main(int argc, char **argv)
 	SDL_Wrapper::Texture* gfx_projectile = nullptr;
 
 	TextureManager* textureManager = nullptr;
+	DebugDraw* debugDraw = nullptr;
 
 	// Fonts
 	TTF_Font* font;
@@ -157,21 +165,29 @@ int main(int argc, char **argv)
 	// Game variables
 	float dt = 1.0f / 60.0f;
 
+	debugDraw = new DebugDraw(renderer);
+
+	debugDraw->SetFlags(b2Draw::e_shapeBit
+		//| b2Draw::e_aabbBit
+		| b2Draw::e_jointBit
+		| b2Draw::e_centerOfMassBit);
+
 	// Box2D
 	b2Vec2 gravity(0.0f, 0.0f);
-	b2World box2D_world(gravity);
+	b2World* box2Dworld = new b2World(gravity);
+	box2Dworld->SetDebugDraw(debugDraw);
 	int box2D_velocityIterations = 6;
 	int box2D_positionIterations = 2;
 
 	// World
 	World* world = World::GetInstance();
-	world->Init(&box2D_world);
+	world->Init(box2Dworld);
 
 	// Entity
 	//Ship* myShip = new Ship(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, ENTITY_INIT_WIDTH, ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, gfx_entity, &box2D_world);
 
-	Ship* myShip = world->SpawnEntity<Ship>(WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT / 2.0f, ENTITY_INIT_WIDTH,
-		ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, 0.0f, textureManager->LoadTexture("Ship.png"));
+	Ship* myShip = world->SpawnEntity<Ship>(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, ENTITY_INIT_WIDTH,
+		ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, MathHelper::DegreesToRadians(90.0f), textureManager->LoadTexture("Ship.png"));
 
 	vec2 curMouseClickPos;
 
@@ -307,10 +323,10 @@ int main(int argc, char **argv)
 		}
 
 		// Box2D world step
-		box2D_world.Step(dt, box2D_velocityIterations, box2D_positionIterations);
+		box2Dworld->Step(dt, box2D_velocityIterations, box2D_positionIterations);
 
 		// Update game logic
-		myShip->MoveTo({ (float)curMouseClickPos.x, (float)curMouseClickPos.y }, 20.0f, dt);
+		myShip->MoveTo({ (float)curMouseClickPos.x*Box2dHelper::Units, (float)curMouseClickPos.y*Box2dHelper::Units }, 40.0f*Box2dHelper::Units, dt);
 
 		world->Update(dt);
 
@@ -322,35 +338,55 @@ int main(int argc, char **argv)
 
 		world->Draw(renderer);
 
+		box2Dworld->DrawDebugData();
+
 		// Debug text
-		if (gfx_text_debug->CreateFromText("Angle: " + std::to_string(fmod(myShip->GetAngle(false), 360.0f)), { 255, 255, 255 }, font, renderer))
+		if (gfx_text_debug->CreateFromText("Angle (Deg): " + std::to_string(fmod(myShip->GetAngle(false), 360.0f)), { 255, 255, 255 }, font, renderer))
 		{
 			gfx_text_debug->Render(0, 0, renderer);
 		}
 
-		if (gfx_text_debug->CreateFromText("PosX: " + std::to_string(myShip->GetPosition().x), { 255, 255, 255 }, font, renderer))
+		if (gfx_text_debug->CreateFromText("PosX (px): " + std::to_string(myShip->GetPosition(false).x), { 255, 255, 255 }, font, renderer))
 		{
-			gfx_text_debug->Render(0, 15, renderer);
+			gfx_text_debug->Render(0, 20, renderer);
 		}
 
-		if (gfx_text_debug->CreateFromText("PosY: " + std::to_string(myShip->GetPosition().y), { 255, 255, 255 }, font, renderer))
+		if (gfx_text_debug->CreateFromText("PosY (px): " + std::to_string(myShip->GetPosition(false).y), { 255, 255, 255 }, font, renderer))
 		{
-			gfx_text_debug->Render(0, 30, renderer);
+			gfx_text_debug->Render(0, 40, renderer);
+		}
+
+		if (gfx_text_debug->CreateFromText("PosX (m): " + std::to_string(myShip->GetPosition(true).x), { 255, 255, 255 }, font, renderer))
+		{
+			gfx_text_debug->Render(0, 60, renderer);
+		}
+
+		if (gfx_text_debug->CreateFromText("PosY (m): " + std::to_string(myShip->GetPosition(true).y), { 255, 255, 255 }, font, renderer))
+		{
+			gfx_text_debug->Render(0, 80, renderer);
 		}
 
 		if (gfx_text_debug->CreateFromText("VelX: " + std::to_string(myShip->GetLinearVelocity().x), { 255, 255, 255 }, font, renderer))
 		{
-			gfx_text_debug->Render(0, 45, renderer);
+			gfx_text_debug->Render(0, 100, renderer);
 		}
 
 		if (gfx_text_debug->CreateFromText("VelY: " + std::to_string(myShip->GetLinearVelocity().y), { 255, 255, 255 }, font, renderer))
 		{
-			gfx_text_debug->Render(0, 60, renderer);
+			gfx_text_debug->Render(0, 120, renderer);
 		}
 
 		SDL_RenderPresent(renderer);
 	}
 
+	if (debugDraw)
+	{
+		delete debugDraw;
+		debugDraw = nullptr;
+	}
+
+	world = nullptr;
+	//world->Clear();
 	World::Destroy();
 	TextureManager::Destroy();
 
@@ -376,6 +412,8 @@ int main(int argc, char **argv)
 	TTF_Quit();
 	IMG_Quit();
 	SDL_Quit();
+
+	_CrtDumpMemoryLeaks();
 
     return 0;
 }

@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\DebugDraw.cpp" />
     <ClCompile Include="src\Entity.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Ship.cpp" />
@@ -22,6 +23,7 @@
     <ClCompile Include="src\World.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\DebugDraw.h" />
     <ClInclude Include="src\Common.h" />
     <ClInclude Include="src\Entity.h" />
     <ClInclude Include="src\Ship.h" />
@@ -75,7 +77,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ga_d.lib;SDL2.lib;SDL2main.lib;Box2D_d.lib;SDL2_image.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ga_d.lib;SDL2.lib;SDL2main.lib;Box2D_d.lib;SDL2_image.lib;SDL2_ttf.lib;SDL2_gfx_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
     <PostBuildEvent>

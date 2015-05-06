@@ -1,6 +1,15 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+/*
+#ifdef _DEBUG
+#ifndef DBG_NEW
+#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )
+#define new DBG_NEW
+#endif
+#endif  // _DEBUG
+*/
+
 struct vec2f
 {
 	vec2f(float _x, float _y)
@@ -42,6 +51,12 @@ namespace MathHelper
 	{
 		return degrees * 0.0174532925f;
 	}
+}
+
+namespace Box2dHelper
+{
+	static const float PixelsPerMeter = 30.0f;
+	static const float Units = 1.0f / PixelsPerMeter;
 }
 
 #endif

@@ -37,6 +37,7 @@ void World::Clear()
 	{
 		if (mEntities[i])
 		{
+			mb2World->DestroyBody(mEntities[i]->Getb2Body());
 			delete mEntities[i];
 			mEntities[i] = nullptr;
 		}
@@ -53,6 +54,14 @@ void World::Update(float dt)
 {
 	for (unsigned int i = 0; i < mEntities.size(); ++i)
 	{
+		if (!mEntities[i]->IsAlive())
+		{
+			mb2World->DestroyBody(mEntities[i]->Getb2Body());
+			std::swap(mEntities[i], mEntities.back());
+			mEntities.pop_back();
+			continue;
+		}
+
 		mEntities[i]->Update(dt);
 	}
 }
@@ -72,4 +81,10 @@ World::World()
 World::~World()
 {
 	Clear();
+
+	if (mb2World)
+	{
+		delete mb2World;
+		mb2World = nullptr;
+	}
 }

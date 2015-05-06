@@ -6,6 +6,7 @@
 
 #include "SDL_Wrapper.h"
 #include "Common.h"
+#include "TextureManager.h"
 
 class Entity
 {
@@ -16,24 +17,31 @@ public:
 
 	bool Init();
 
-	b2Vec2 GetPosition() const;
-	float GetAngle(bool radians) const;
+	b2Body* Getb2Body() const;
+
+	b2Vec2 GetPosition(bool inMeters) const;
+	float GetAngle(bool inRadians) const;
 	b2Vec2 GetLinearVelocity() const;
 	float GetAngularVelocity() const;
+
+	bool IsAlive() const;
+
+	b2Vec2 GetDimensions(bool inMeters) const;
 
 	void Draw(SDL_Renderer* renderer);
 	virtual void Update(float dt);
 	void Reset();
 
 protected:
-	SDL_Rect* mSdlRect;
+	SDL_Rect* mSdlClipRect;
+	SDL_Point* mSdlCenterPoint;
 	SDL_Wrapper::Texture* mTexture;
 	b2Body* mb2Body;
 
-	b2Vec2 mLocalVec;
+	b2Vec2 mb2LocalInitVec;
 
 	float mSpawnPosX, mSpawnPosY;
-	int mWidth, mHeight;
+	float mWidth, mHeight;
 	int mHealth;
 	int mDamage;
 

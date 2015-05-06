@@ -19,7 +19,7 @@ void Ship::Update(float dt)
 	if (mCurCooldown > 0.0f)
 		mCurCooldown -= dt;
 
-	b2Vec2 forceDirection = mb2Body->GetWorldVector(b2Vec2(0, 1));
+	b2Vec2 forceDirection = mb2Body->GetWorldVector(mb2LocalInitVec);
 	forceDirection *= mMagnitude;
 
 	if (mEventTriggers[Events::THRUST_FORWARD])
@@ -51,9 +51,9 @@ void Ship::Update(float dt)
 
 void Ship::Init()
 {
-	mTorque = 4000000.0f;
-	mMagnitude = 40000.0f;
-	mCooldown = 0.5f;
+	mTorque = 40.0f;
+	mMagnitude = 25.0f;
+	mCooldown = 0.15f;
 	mCurCooldown = 0.0f;
 }
 
@@ -68,6 +68,7 @@ void Ship::ActivateEventTrigger(Events movement, bool activate)
 void Ship::RotateTo(b2Vec2 point, float degreesPerStep)
 {
 	b2Vec2 toTarget = point - mb2Body->GetPosition();
+	toTarget.Normalize();
 	float desiredAngle = atan2f(-toTarget.x, toTarget.y);
 	float totalRotation = desiredAngle - mb2Body->GetAngle();
 	float newAngle = mb2Body->GetAngle() + std::min(degreesPerStep, std::max(-degreesPerStep, totalRotation));
@@ -78,10 +79,11 @@ void Ship::RotateTo_Torque(b2Vec2 point, float dt)
 {
 	float bodyAngle = GetAngle(true);
 
-	b2Vec2 toTarget = point - GetPosition();
+	b2Vec2 toTarget = point - GetPosition(true);
+	toTarget.Normalize();
 	float desiredAngle = atan2f(toTarget.x, -toTarget.y);
 
-	float nextAngle = bodyAngle + GetAngularVelocity() / 6.0f;
+	float nextAngle = bodyAngle + GetAngularVelocity() / 2.0f;
 	float totalRotation = desiredAngle - nextAngle;
 
 	while (totalRotation < MathHelper::DegreesToRadians(-180)) totalRotation += MathHelper::DegreesToRadians(360);
@@ -94,20 +96,23 @@ void Ship::RotateTo_Torque(b2Vec2 point, float dt)
 
 void Ship::MoveTo(b2Vec2 point, float radius, float dt)
 {
-	b2Vec2 pos = GetPosition();
+	b2Vec2 pos = GetPosition(true);
 	float dist = sqrt(std::pow(point.x - pos.x, 2) + std::pow(point.y - pos.y, 2));
 
 	if (dist <= radius)
 	{
-		ActivateEventTrigger(Events::THRUST_FORWARD, false);
+		//ActivateEventTrigger(Events::THRUST_FORWARD, false);
 
 		mb2Body->SetLinearDamping(5.0f);
 		mb2Body->SetAngularDamping(5.0f);
 	}
 	else
 	{
-		ActivateEventTrigger(Events::THRUST_FORWARD, true);
+		//ActivateEventTrigger(Events::THRUST_FORWARD, true);
 		RotateTo_Torque(point, dt);
+
+		mb2Body->SetLinearDamping(0.0f);
+		mb2Body->SetAngularDamping(0.0f);
 	}
 }
 
@@ -118,9 +123,11 @@ bool Ship::Shoot()
 	if (mCurCooldown <= 0.0f)
 	{
 		// Spawn new projectile
-		Projectile* newProjectile = World::GetInstance()->SpawnEntity<Projectile>(GetPosition().x+(mHeight*0.5f)*std::cos(GetAngle(true)),
-			GetPosition().y+(mHeight*0.5f)*std::sin(GetAngle(true)), 4, 4, 1, 1, GetAngle(true), TextureManager::GetInstance()->LoadTexture("Projectile.png"));
-		//newProjectile->Init()
+		Projectile* newProjectile = World::GetInstance()->SpawnEntity<Projectile>(
+			GetPosition(false).x - (GetDimensions(false).y*0.5f)*std::cos(GetAngle(true) - 4.7f),
+			GetPosition(false).y - (GetDimensions(false).y*0.5f)*std::sin(GetAngle(true) - 4.7f),
+			4, 4, 1, 1, GetAngle(true), TextureManager::GetInstance()->LoadTexture("Projectile.png"));
+		newProjectile->Init(2.0f);
 		mCurCooldown = mCooldown;
 
 		successful = true;

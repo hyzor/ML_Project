@@ -20,20 +20,39 @@ Projectile::~Projectile()
 {
 }
 
-void Projectile::Init(b2Vec2 velocity)
+void Projectile::Init(float lifetime)
 {
-	mInitVelocity = velocity;
-	mb2Body->SetLinearVelocity(velocity);
+	mLifetime = lifetime;
+	mAlivetimer = 0.0f;
+
+	float magnitude = 0.65f;
+
+	//mInitVelocity = velocity;
+	//mb2Body->SetLinearVelocity(velocity);
+
+	//b2Vec2 forceDirection = mb2Body->GetWorldVector(b2Vec2(0, 1));
+
+	b2Vec2 force = b2Vec2(-(std::cos(GetAngle(true) - 4.7f)), -(std::sin(GetAngle(true) - 4.7f)));
+	force.Normalize();
+	force *= magnitude;
+
+	mb2Body->ApplyLinearImpulse(force, mb2Body->GetWorldCenter(), true);
 }
 
 void Projectile::Update(float dt)
 {
+	if (mAlivetimer >= mLifetime)
+	{
+		mIsAlive = false;
+	}
+
+	mAlivetimer += dt;
 	//b2Vec2 stepVelocity = dt * mInitVelocity;
 
-	b2Vec2 forceDirection = mb2Body->GetWorldVector(b2Vec2(0, 1));
-	forceDirection *= 40000.0f;
-	mb2Body->ApplyForce(-forceDirection, mb2Body->GetWorldCenter(), true);
+	//b2Vec2 forceDirection = mb2Body->GetWorldVector(b2Vec2(0, 1));
+	//forceDirection *= 4.0f;
+	//mb2Body->ApplyForce(-forceDirection, mb2Body->GetWorldCenter(), true);
 
-	//b2Vec2 force = b2Vec2(-(std::cos(mb2Body->GetAngle() - 4.7f)*40000.0f), -(std::sin(mb2Body->GetAngle() - 4.7f)*40000.0f));
-	//mb2Body->ApplyLinearImpulse(force, mb2Body->GetPosition(), true);
+	//b2Vec2 force = b2Vec2((std::cos(GetAngle(true))), (std::sin(GetAngle(true))));
+	//mb2Body->ApplyLinearImpulse(force, mb2Body->GetWorldCenter(), true);
 }

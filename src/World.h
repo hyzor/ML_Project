@@ -2,6 +2,7 @@
 #define WORLD_H_
 
 #include <vector>
+#include <algorithm>
 
 #include <SDL/SDL.h>
 #include <Box2D/Box2D.h>
