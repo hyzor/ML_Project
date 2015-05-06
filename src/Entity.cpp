@@ -56,6 +56,8 @@ Entity::Entity(float x, float y, int width, int height, int health, int damage, 
 	fixtureDef.friction = 0.0f;
 	fixtureDef.restitution = 0.0f;
 
+	mb2Body->SetUserData(this);
+
 	mb2Body->CreateFixture(&fixtureDef);
 }
 
@@ -120,11 +122,28 @@ void Entity::Draw(SDL_Renderer* renderer)
 	//TextureManager::GetInstance()->LoadTexture("BlueDot.png")->Render((int)GetPosition(false).x, (int)GetPosition(false).y, renderer, NULL, GetAngle(false));
 }
 
-void Entity::Update(float dt){}
+void Entity::Update(float dt)
+{
+	if (mHealth <= 0)
+	{
+		mIsAlive = false;
+	}
+}
 
 void Entity::Reset()
 {
 	mb2Body->SetTransform(b2Vec2(mSpawnPosX*Box2dHelper::Units, mSpawnPosY*Box2dHelper::Units), 0.0f);
 	mb2Body->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
 	mb2Body->SetAngularVelocity(0.0f);
+	mIsAlive = true;
+}
+
+void Entity::DoCollide(int collisionDamage)
+{
+	mHealth -= collisionDamage;
+}
+
+int Entity::GetCollisionDamage() const
+{
+	return mDamage;
 }

@@ -32,6 +32,9 @@ public:
 	virtual void Update(float dt);
 	void Reset();
 
+	void DoCollide(int collisionDamage);
+	int GetCollisionDamage() const;
+
 protected:
 	SDL_Rect* mSdlClipRect;
 	SDL_Point* mSdlCenterPoint;

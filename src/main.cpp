@@ -29,6 +29,7 @@ decimal genome.
 #include "World.h"
 #include "TextureManager.h"
 #include "DebugDraw.h"
+#include "ContactListener.h"
 
 /*
 #define _CRTDBG_MAP_ALLOC
@@ -89,6 +90,7 @@ int main(int argc, char **argv)
 
 	TextureManager* textureManager = nullptr;
 	DebugDraw* debugDraw = nullptr;
+	ContactListener* contactListener = nullptr;
 
 	// Fonts
 	TTF_Font* font;
@@ -172,10 +174,13 @@ int main(int argc, char **argv)
 		| b2Draw::e_jointBit
 		| b2Draw::e_centerOfMassBit);
 
+	contactListener = new ContactListener();
+
 	// Box2D
 	b2Vec2 gravity(0.0f, 0.0f);
 	b2World* box2Dworld = new b2World(gravity);
 	box2Dworld->SetDebugDraw(debugDraw);
+	box2Dworld->SetContactListener(contactListener);
 	int box2D_velocityIterations = 6;
 	int box2D_positionIterations = 2;
 
@@ -187,6 +192,9 @@ int main(int argc, char **argv)
 	//Ship* myShip = new Ship(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, ENTITY_INIT_WIDTH, ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, gfx_entity, &box2D_world);
 
 	Ship* myShip = world->SpawnEntity<Ship>(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, ENTITY_INIT_WIDTH,
+		ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, MathHelper::DegreesToRadians(90.0f), textureManager->LoadTexture("Ship.png"));
+
+	Ship* enemyShip = world->SpawnEntity<Ship>(WINDOW_WIDTH / 3, WINDOW_HEIGHT / 2, ENTITY_INIT_WIDTH,
 		ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, MathHelper::DegreesToRadians(90.0f), textureManager->LoadTexture("Ship.png"));
 
 	vec2 curMouseClickPos;
@@ -283,11 +291,26 @@ int main(int argc, char **argv)
 					break;
 				case SDLK_r:
 					std::cout << "Key event: 'r' pressed\n";
-					myShip->Reset();
+					if (myShip)
+						myShip->Reset();
+					if (enemyShip)
+						enemyShip->Reset();
+					break;
+				case SDLK_e:
+					std::cout << "Key event: 'e' pressed\n";
+					myShip->ActivateEventTrigger(Ship::STRAFE_RIGHT, true);
+					break;
+				case SDLK_q:
+					std::cout << "Key event: 'q' pressed\n";
+					myShip->ActivateEventTrigger(Ship::STRAFE_LEFT, true);
 					break;
 				case SDLK_SPACE:
 					std::cout << "Key event: 'space' pressed\n";
 					myShip->ActivateEventTrigger(Ship::SHOOT, true);
+					break;
+				case SDLK_LSHIFT:
+					std::cout << "Key event: 'lshift' pressed\n";
+					myShip->ActivateEventTrigger(Ship::STABILIZE, true);
 					break;
 				case SDLK_ESCAPE:
 					gameIsRunning = false;
@@ -314,9 +337,21 @@ int main(int argc, char **argv)
 						std::cout << "Key event: 'd' released\n";
 						myShip->ActivateEventTrigger(Ship::TORQUE_RIGHT, false);
 						break;
+					case SDLK_e:
+						std::cout << "Key event: 'e' released\n";
+						myShip->ActivateEventTrigger(Ship::STRAFE_RIGHT, false);
+						break;
+					case SDLK_q:
+						std::cout << "Key event: 'q' released\n";
+						myShip->ActivateEventTrigger(Ship::STRAFE_LEFT, false);
+						break;
 					case SDLK_SPACE:
 						std::cout << "Key event: 'space' released\n";
 						myShip->ActivateEventTrigger(Ship::SHOOT, false);
+						break;
+					case SDLK_LSHIFT:
+						std::cout << "Key event: 'lshift' released\n";
+						myShip->ActivateEventTrigger(Ship::STABILIZE, false);
 						break;
 				}
 			}
@@ -385,20 +420,21 @@ int main(int argc, char **argv)
 		debugDraw = nullptr;
 	}
 
+	if (contactListener)
+	{
+		delete contactListener;
+		contactListener = nullptr;
+	}
+
 	world = nullptr;
 	//world->Clear();
 	World::Destroy();
 	TextureManager::Destroy();
 
 	// Free SDL stuff
-	//delete gfx_background;
 	gfx_background = nullptr;
-	//delete gfx_ship;
-	//gfx_ship = nullptr;
 	delete gfx_text_debug;
 	gfx_text_debug = nullptr;
-	//delete gfx_projectile;
-	//gfx_projectile = nullptr;
 
 	TTF_CloseFont(font);
 	font = nullptr;

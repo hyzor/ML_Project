@@ -41,6 +41,8 @@ void Projectile::Init(float lifetime)
 
 void Projectile::Update(float dt)
 {
+	Entity::Update(dt);
+
 	if (mAlivetimer >= mLifetime)
 	{
 		mIsAlive = false;

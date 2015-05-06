@@ -21,7 +21,7 @@ void Ship::Update(float dt)
 
 	b2Vec2 forceDirection = mb2Body->GetWorldVector(mb2LocalInitVec);
 	forceDirection *= mMagnitude;
-
+	
 	if (mEventTriggers[Events::THRUST_FORWARD])
 	{
 		mb2Body->ApplyForce(-forceDirection, mb2Body->GetWorldCenter(), true);
@@ -42,6 +42,30 @@ void Ship::Update(float dt)
 		mb2Body->ApplyTorque(mTorque, true);
 	}
 
+	if (mEventTriggers[Events::STRAFE_LEFT])
+	{
+		float dirX = std::cos((GetAngle(true) + MathHelper::DegreesToRadians(90.0f)) - 4.7f);
+		float dirY = std::sin((GetAngle(true) + MathHelper::DegreesToRadians(90.0f)) - 4.7f);
+
+		b2Vec2 force = b2Vec2(dirX*mMagnitude, dirY*mMagnitude);
+		mb2Body->ApplyForce(force, mb2Body->GetWorldCenter(), true);
+	}
+
+	if (mEventTriggers[Events::STRAFE_RIGHT])
+	{
+		float dirX = std::cos((GetAngle(true) - MathHelper::DegreesToRadians(90.0f)) - 4.7f);
+		float dirY = std::sin((GetAngle(true) - MathHelper::DegreesToRadians(90.0f)) - 4.7f);
+
+		b2Vec2 force = b2Vec2(dirX*mMagnitude, dirY*mMagnitude);
+		mb2Body->ApplyForce(force, mb2Body->GetWorldCenter(), true);
+	}
+
+	if (mEventTriggers[Events::STABILIZE])
+	{
+		mb2Body->SetLinearDamping(5.0f);
+		mb2Body->SetAngularDamping(5.0f);
+	}
+
 	if (mEventTriggers[Events::SHOOT])
 	{
 		// Try to shoot
@@ -51,8 +75,8 @@ void Ship::Update(float dt)
 
 void Ship::Init()
 {
-	mTorque = 40.0f;
-	mMagnitude = 25.0f;
+	mTorque = 30.0f;
+	mMagnitude = 20.0f;
 	mCooldown = 0.15f;
 	mCurCooldown = 0.0f;
 }
@@ -122,11 +146,14 @@ bool Ship::Shoot()
 
 	if (mCurCooldown <= 0.0f)
 	{
+		int width, height;
+		width = height = 4;
+
 		// Spawn new projectile
 		Projectile* newProjectile = World::GetInstance()->SpawnEntity<Projectile>(
-			GetPosition(false).x - (GetDimensions(false).y*0.5f)*std::cos(GetAngle(true) - 4.7f),
-			GetPosition(false).y - (GetDimensions(false).y*0.5f)*std::sin(GetAngle(true) - 4.7f),
-			4, 4, 1, 1, GetAngle(true), TextureManager::GetInstance()->LoadTexture("Projectile.png"));
+			GetPosition(false).x - (GetDimensions(false).y*0.50f)*std::cos(GetAngle(true) - 4.7f) - ((float)height*0.7f)*std::cos(GetAngle(true) - 4.7f),
+			GetPosition(false).y - (GetDimensions(false).y*0.50f)*std::sin(GetAngle(true) - 4.7f) - ((float)height*0.7f)*std::sin(GetAngle(true) - 4.7f),
+			width, height, 1, 1, GetAngle(true), TextureManager::GetInstance()->LoadTexture("Projectile.png"));
 		newProjectile->Init(2.0f);
 		mCurCooldown = mCooldown;
 

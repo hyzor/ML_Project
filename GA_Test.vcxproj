@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\ContactListener.cpp" />
     <ClCompile Include="src\DebugDraw.cpp" />
     <ClCompile Include="src\Entity.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -23,6 +24,7 @@
     <ClCompile Include="src\World.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ContactListener.h" />
     <ClInclude Include="src\DebugDraw.h" />
     <ClInclude Include="src\Common.h" />
     <ClInclude Include="src\Entity.h" />
