@@ -3,6 +3,8 @@
 
 #include <cmath>
 
+#include <deque>
+
 #include "Entity.h"
 #include "Projectile.h"
 #include "World.h"
@@ -42,9 +44,14 @@ public:
 	void Update(float dt);
 
 	void RotateTo(b2Vec2 point, float degreesPerStep);
-	void RotateTo_Torque(b2Vec2 point, float dt);
+	float RotateTo_Torque(b2Vec2 point, float dt);
 
 	void MoveTo(b2Vec2 point, float radius, float dt);
+
+	void AddWaypoint(b2Vec2 waypoint);
+	b2Vec2 GetCurrentWaypoint() const;
+
+	void AddMovementPattern(int movementPattern, bool immediate);
 
 private:
 	float mTorque;
@@ -57,6 +64,17 @@ private:
 
 	void Init();
 	bool Shoot();
+
+	b2Vec2 GetCorrectionWaypoint(b2Vec2 waypoint);
+	float ConstrainAngle180(float angle);
+
+	void ProcessWaypoints(float dt);
+
+	//std::vector<b2Vec2> mWaypoints;
+
+	std::deque<b2Vec2> mWaypoints;
+
+	bool mReachedCurWaypoint;
 };
 
 #endif

@@ -93,6 +93,14 @@ float Entity::GetAngle(bool inRadians) const
 		return MathHelper::RadiansToDegrees(mb2Body->GetAngle());
 }
 
+float Entity::GetAngle_NonRetarded(bool inRadians) const
+{
+	if (inRadians)
+		return mb2Body->GetAngle() + MathHelper::DegreesToRadians(90.0f);
+	else
+		return MathHelper::RadiansToDegrees(mb2Body->GetAngle() + MathHelper::DegreesToRadians(90.0f));
+}
+
 b2Vec2 Entity::GetLinearVelocity() const
 {
 	return mb2Body->GetLinearVelocity();

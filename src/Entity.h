@@ -21,6 +21,7 @@ public:
 
 	b2Vec2 GetPosition(bool inMeters) const;
 	float GetAngle(bool inRadians) const;
+	float GetAngle_NonRetarded(bool inRadians) const;
 	b2Vec2 GetLinearVelocity() const;
 	float GetAngularVelocity() const;
 

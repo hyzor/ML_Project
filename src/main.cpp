@@ -191,11 +191,21 @@ int main(int argc, char **argv)
 	// Entity
 	//Ship* myShip = new Ship(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, ENTITY_INIT_WIDTH, ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, gfx_entity, &box2D_world);
 
-	Ship* myShip = world->SpawnEntity<Ship>(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, ENTITY_INIT_WIDTH,
+	Ship* myShip = world->SpawnEntity<Ship>(0.0f, WINDOW_HEIGHT/2, ENTITY_INIT_WIDTH,
 		ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, MathHelper::DegreesToRadians(90.0f), textureManager->LoadTexture("Ship.png"));
 
-	Ship* enemyShip = world->SpawnEntity<Ship>(WINDOW_WIDTH / 3, WINDOW_HEIGHT / 2, ENTITY_INIT_WIDTH,
-		ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, MathHelper::DegreesToRadians(90.0f), textureManager->LoadTexture("Ship.png"));
+	/*
+	myShip->AddWaypoint(b2Vec2(0.0f, 0.0f));
+	myShip->AddWaypoint(b2Vec2((0.0f)*Box2dHelper::Units, (WINDOW_HEIGHT / 2.0f)*Box2dHelper::Units));
+	myShip->AddWaypoint(b2Vec2((WINDOW_WIDTH / 2.0f)*Box2dHelper::Units, (WINDOW_HEIGHT / 2.0f)*Box2dHelper::Units));
+	myShip->AddWaypoint(b2Vec2(WINDOW_WIDTH*Box2dHelper::Units, 0.0f));
+	myShip->AddWaypoint(b2Vec2(0.0f, WINDOW_HEIGHT*Box2dHelper::Units));
+	*/
+
+	myShip->AddMovementPattern(Ship::Attributes::MOVEMENT_ZIGZAG, true);
+
+	//Ship* enemyShip = world->SpawnEntity<Ship>(WINDOW_WIDTH / 3, WINDOW_HEIGHT / 2, ENTITY_INIT_WIDTH,
+		//ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, MathHelper::DegreesToRadians(90.0f), textureManager->LoadTexture("Ship.png"));
 
 	vec2 curMouseClickPos;
 
@@ -293,8 +303,8 @@ int main(int argc, char **argv)
 					std::cout << "Key event: 'r' pressed\n";
 					if (myShip)
 						myShip->Reset();
-					if (enemyShip)
-						enemyShip->Reset();
+					//if (enemyShip)
+						//enemyShip->Reset();
 					break;
 				case SDLK_e:
 					std::cout << "Key event: 'e' pressed\n";
@@ -361,7 +371,7 @@ int main(int argc, char **argv)
 		box2Dworld->Step(dt, box2D_velocityIterations, box2D_positionIterations);
 
 		// Update game logic
-		myShip->MoveTo({ (float)curMouseClickPos.x*Box2dHelper::Units, (float)curMouseClickPos.y*Box2dHelper::Units }, 40.0f*Box2dHelper::Units, dt);
+		//myShip->MoveTo({ (float)curMouseClickPos.x*Box2dHelper::Units, (float)curMouseClickPos.y*Box2dHelper::Units }, 20.0f*Box2dHelper::Units, dt);
 
 		world->Update(dt);
 
@@ -409,6 +419,16 @@ int main(int argc, char **argv)
 		if (gfx_text_debug->CreateFromText("VelY: " + std::to_string(myShip->GetLinearVelocity().y), { 255, 255, 255 }, font, renderer))
 		{
 			gfx_text_debug->Render(0, 120, renderer);
+		}
+
+		if (gfx_text_debug->CreateFromText("WaypointX (m): " + std::to_string(myShip->GetCurrentWaypoint().x*Box2dHelper::Units), { 255, 255, 255 }, font, renderer))
+		{
+			gfx_text_debug->Render(0, 140, renderer);
+		}
+
+		if (gfx_text_debug->CreateFromText("WaypointY (m): " + std::to_string(myShip->GetCurrentWaypoint().y*Box2dHelper::Units), { 255, 255, 255 }, font, renderer))
+		{
+			gfx_text_debug->Render(0, 160, renderer);
 		}
 
 		SDL_RenderPresent(renderer);
