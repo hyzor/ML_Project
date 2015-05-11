@@ -34,6 +34,24 @@ public:
 		NUM_EVENTS
 	};
 
+	struct Waypoint
+	{
+		b2Vec2 position;
+		bool isIntermediate;
+
+		Waypoint()
+		{
+			position = b2Vec2(0.0f, 0.0f);
+			isIntermediate = false;
+		}
+
+		Waypoint(b2Vec2 _position, bool _isIntermediate)
+		{
+			position = _position;
+			isIntermediate = _isIntermediate;
+		}
+	};
+
 public:
 	Ship();
 	Ship(float x, float y, int width, int height, int health, int damage, float angle, SDL_Wrapper::Texture* texture, b2World* world);
@@ -47,8 +65,9 @@ public:
 	float RotateTo_Torque(b2Vec2 point, float dt);
 
 	void MoveTo(b2Vec2 point, float radius, float dt);
+	void MoveToWaypoint(Waypoint waypoint, float radius, float dt);
 
-	void AddWaypoint(b2Vec2 waypoint);
+	b2Vec2 AddWaypoint(b2Vec2 waypoint);
 	b2Vec2 GetCurrentWaypoint() const;
 
 	void AddMovementPattern(int movementPattern, bool immediate);
@@ -72,7 +91,8 @@ private:
 
 	//std::vector<b2Vec2> mWaypoints;
 
-	std::deque<b2Vec2> mWaypoints;
+	//std::deque<b2Vec2> mWaypoints;
+	std::deque<Waypoint> mWaypoints;
 
 	bool mReachedCurWaypoint;
 };

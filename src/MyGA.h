@@ -13,6 +13,7 @@ class MyGA : public GASteadyStateGA
 public:
 
 	MyGA(const GAGenome& genome) : GASteadyStateGA(genome) {}
+	MyGA(const GAPopulation& pop) : GASteadyStateGA(pop) {}
 	virtual ~MyGA() {}
 	virtual void step();
 	MyGA& operator++() { step(); return *this; }

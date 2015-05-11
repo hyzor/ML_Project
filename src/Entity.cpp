@@ -42,7 +42,7 @@ Entity::Entity(float x, float y, int width, int height, int health, int damage, 
 	b2BodyDef bodyDef;
 	bodyDef.type = b2_dynamicBody;
 	bodyDef.position.Set(x*Box2dHelper::Units, y*Box2dHelper::Units);
-	bodyDef.angle = angle;
+	bodyDef.angle = angle - 4.71238898038f;
 	mb2Body = world->CreateBody(&bodyDef);
 
 	mb2LocalInitVec = b2Vec2(std::cos(angle), std::sin(angle));
@@ -96,9 +96,9 @@ float Entity::GetAngle(bool inRadians) const
 float Entity::GetAngle_NonRetarded(bool inRadians) const
 {
 	if (inRadians)
-		return mb2Body->GetAngle() + MathHelper::DegreesToRadians(90.0f);
+		return mb2Body->GetAngle() - 4.71238898038f; // 3pi/2
 	else
-		return MathHelper::RadiansToDegrees(mb2Body->GetAngle() + MathHelper::DegreesToRadians(90.0f));
+		return MathHelper::RadiansToDegrees(mb2Body->GetAngle() - 4.71238898038f); //3pi/2
 }
 
 b2Vec2 Entity::GetLinearVelocity() const
@@ -136,6 +136,18 @@ void Entity::Update(float dt)
 	{
 		mIsAlive = false;
 	}
+
+	if (GetPosition(false).y < 0)
+		SetPosition(b2Vec2(GetPosition(true).x, 480.0f*Box2dHelper::Units));
+
+	if (GetPosition(false).y > 480.0f)
+		SetPosition(b2Vec2(GetPosition(true).x, 0.0f));
+
+	if (GetPosition(false).x < 0.0f)
+		SetPosition(b2Vec2(640.0f * Box2dHelper::Units, GetPosition(true).y));
+
+	if (GetPosition(false).x > 640.0f)
+		SetPosition(b2Vec2(0.0f, GetPosition(true).y));
 }
 
 void Entity::Reset()
@@ -154,4 +166,9 @@ void Entity::DoCollide(int collisionDamage)
 int Entity::GetCollisionDamage() const
 {
 	return mDamage;
+}
+
+void Entity::SetPosition(b2Vec2 pos)
+{
+	mb2Body->SetTransform(pos, GetAngle(true));
 }

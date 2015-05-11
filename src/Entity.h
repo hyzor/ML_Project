@@ -25,6 +25,8 @@ public:
 	b2Vec2 GetLinearVelocity() const;
 	float GetAngularVelocity() const;
 
+	void SetPosition(b2Vec2 pos);
+
 	bool IsAlive() const;
 
 	b2Vec2 GetDimensions(bool inMeters) const;

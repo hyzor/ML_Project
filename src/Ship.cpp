@@ -14,6 +14,16 @@ Ship::Ship(float x, float y, int width, int height, int health, int damage, floa
 
 void Ship::Update(float dt)
 {
+	if (GetPosition(false).y < 0 || GetPosition(false).y > 480.0f
+		|| GetPosition(false).x < 0.0f || GetPosition(false).x > 640.0f)
+	{
+		if (mWaypoints.size() > 0)
+		{
+			if (mWaypoints.front().isIntermediate)
+				mWaypoints.pop_front();
+		}
+	}
+
 	Entity::Update(dt);
 
 	ProcessWaypoints(dt);
@@ -115,13 +125,22 @@ float Ship::RotateTo_Torque(b2Vec2 point, float dt)
 	toTarget.Normalize();
 	float desiredAngle = atan2f(toTarget.x, -toTarget.y);
 
-	float nextAngle = bodyAngle + GetAngularVelocity() / 2.0f;
+	float nextAngle = bodyAngle + GetAngularVelocity() / 4.0f;
 	float totalRotation = desiredAngle - nextAngle;
 
 	//while (totalRotation < MathHelper::DegreesToRadians(-180)) totalRotation += MathHelper::DegreesToRadians(360);
 	//while (totalRotation > MathHelper::DegreesToRadians(180)) totalRotation -= MathHelper::DegreesToRadians(360);
 
 	totalRotation = ConstrainAngle180(totalRotation);
+
+	float diff = std::abs(desiredAngle - ConstrainAngle180(GetAngle(true)));
+
+	/*
+	if (diff < MathHelper::DegreesToRadians(5.0f))
+	{
+		mb2Body->SetAngularDamping(diff * 100.0f);
+	}
+	*/
 
 	float desiredAngularVelocity = totalRotation * 60.0f;
 	float torque = mb2Body->GetInertia() * desiredAngularVelocity / (dt);
@@ -135,47 +154,70 @@ void Ship::MoveTo(b2Vec2 point, float radius, float dt)
 	b2Vec2 pos = GetPosition(true);
 	float dist = sqrt(std::pow(point.x - pos.x, 2) + std::pow(point.y - pos.y, 2));
 
-	if (dist <= radius + (mb2Body->GetLinearVelocity()).Length())
+	if (dist <= radius*1.0f + (mb2Body->GetLinearVelocity()).Length()*0.5f)
 	{
-		ActivateEventTrigger(Events::THRUST_FORWARD, false);
+		mb2Body->SetLinearDamping(10.0f);
+		mb2Body->SetAngularDamping(0.0f);
 
-		mb2Body->SetLinearDamping(5.0f);
-		mb2Body->SetAngularDamping(5.0f);
-
-		if (dist <= radius * 3.0f)
+		if (dist <= 0.965f*(radius + (mb2Body->GetLinearVelocity()).Length()*0.5f))
 		{
 			mReachedCurWaypoint = true;
 		}
 	}
 	else
 	{
-		//ActivateEventTrigger(Events::THRUST_FORWARD, true);
-
 		b2Vec2 destination = GetCorrectionWaypoint(point);
-
-		std::cout << "Dest x: " << destination.x << "\n";
-		std::cout << "Dest y: " << destination.y << "\n";
 
 		float desiredAngle = RotateTo_Torque(destination, dt);
 
-		if (std::abs(desiredAngle - ConstrainAngle180(GetAngle(true))) < MathHelper::DegreesToRadians(20.0f))
+		if (std::abs(desiredAngle - ConstrainAngle180(GetAngle(true))) < MathHelper::DegreesToRadians(30.0f))
 		{
 			ActivateEventTrigger(Events::THRUST_FORWARD, true);
 			mb2Body->SetLinearDamping(0.0f);
-
 		}
 		else
 		{
 			ActivateEventTrigger(Events::THRUST_FORWARD, false);
 			mb2Body->SetLinearDamping(0.8f);
 		}
+	}
+}
 
-		//RotateTo_Torque(destination, dt);
+void Ship::MoveToWaypoint(Waypoint waypoint, float radius, float dt)
+{
+	b2Vec2 pos = GetPosition(true);
+	float dist = sqrt(std::pow(waypoint.position.x - pos.x, 2) + std::pow(waypoint.position.y - pos.y, 2));
 
-		//mb2Body->SetLinearDamping(0.0f);
+	if (waypoint.isIntermediate)
+		dist = sqrt(std::pow(mWaypoints.at(1).position.x - pos.x, 2) + std::pow(mWaypoints.at(1).position.y - pos.y, 2));
+
+	if (dist <= radius*1.0f + (mb2Body->GetLinearVelocity()).Length()*0.5f)
+	{
+		mb2Body->SetLinearDamping(15.0f);
 		mb2Body->SetAngularDamping(0.0f);
 
-		//mReachedCurWaypoint = false;
+		if (dist <= 0.965f*(radius + (mb2Body->GetLinearVelocity()).Length()*0.5f))
+		{
+			mReachedCurWaypoint = true;
+		}
+	}
+	else
+	{
+		b2Vec2 destination = GetCorrectionWaypoint(waypoint.position);
+		//destination = waypoint.position;
+
+		float desiredAngle = RotateTo_Torque(destination, dt);
+
+		if (std::abs(desiredAngle - ConstrainAngle180(GetAngle(true))) < MathHelper::DegreesToRadians(30.0f))
+		{
+			ActivateEventTrigger(Events::THRUST_FORWARD, true);
+			mb2Body->SetLinearDamping(0.0f);
+		}
+		else
+		{
+			ActivateEventTrigger(Events::THRUST_FORWARD, false);
+			mb2Body->SetLinearDamping(0.8f);
+		}
 	}
 }
 
@@ -210,6 +252,12 @@ b2Vec2 Ship::GetCorrectionWaypoint(b2Vec2 waypoint)
 	b2Vec2 desiredVel = waypoint - selfPos;
 	b2Vec2 steeringCorrection = desiredVel - selfVel;
 
+	if (desiredVel.y < 0.0f && selfVel.y < 0.0f && steeringCorrection.y > 0.0f)
+		steeringCorrection.y *= -1.0f;
+
+	if (desiredVel.x < 0.0f && selfVel.x < 0.0f && steeringCorrection.x > 0.0f)
+		steeringCorrection.x *= -1.0f;
+
 	return waypoint + steeringCorrection;
 }
 
@@ -221,9 +269,53 @@ float Ship::ConstrainAngle180(float angle)
 	return angle;
 }
 
-void Ship::AddWaypoint(b2Vec2 waypoint)
+b2Vec2 Ship::AddWaypoint(b2Vec2 waypoint)
 {
-	mWaypoints.push_back(waypoint);
+	b2Vec2 intermediateWaypoint = waypoint;
+
+	float boundW = 640.0f * Box2dHelper::Units;
+	float boundH = 480.0f * Box2dHelper::Units;
+
+	if (waypoint.x < 0.0f)
+	{
+		//intermediateWaypoint.x = 0.0f;
+		//waypoint.x = 0.0f;
+		//mWaypoints.push_back(waypoint);
+		waypoint.x = (boundW) - (waypoint.x * -1.0f);
+	}
+	else if (waypoint.x > boundW)
+	{
+		//intermediateWaypoint.x = boundW;
+		//waypoint.x = 640.0f;
+		//mWaypoints.push_back(waypoint);
+		waypoint.x = 0.0f + (waypoint.x - boundW);
+	}
+
+	if (waypoint.y < 0.0f)
+	{
+		//intermediateWaypoint.y = 0.0f;
+		//waypoint.y = 0.0f;
+		//mWaypoints.push_back(waypoint);
+		waypoint.y = boundH - (waypoint.y * -1.0f);
+	}
+
+	else if (waypoint.y > boundH)
+	{
+		//intermediateWaypoint.y = boundH;
+		//waypoint.y = 480.0f;
+		//mWaypoints.push_back(waypoint);
+		waypoint.y = 0.0f + (waypoint.y - boundH);
+	}
+
+	if (intermediateWaypoint.x != waypoint.x
+		|| intermediateWaypoint.y != waypoint.y)
+	{
+		mWaypoints.push_back(Waypoint(intermediateWaypoint, true));
+	}
+
+	mWaypoints.push_back(Waypoint(waypoint, false));
+
+	return waypoint;
 }
 
 void Ship::ProcessWaypoints(float dt)
@@ -232,6 +324,10 @@ void Ship::ProcessWaypoints(float dt)
 	{
 		if (mReachedCurWaypoint)
 		{
+			if (mWaypoints.front().isIntermediate)
+			{
+				mWaypoints.pop_front();
+			}
 			mWaypoints.pop_front();
 			mReachedCurWaypoint = false;
 		}
@@ -240,7 +336,7 @@ void Ship::ProcessWaypoints(float dt)
 	if (mWaypoints.size() > 0)
 	{
 		ActivateEventTrigger(Events::STABILIZE, false);
-		MoveTo(mWaypoints.front(), 40.0f*Box2dHelper::Units, dt);
+		MoveToWaypoint(mWaypoints.front(), 40.0f*Box2dHelper::Units, dt);
 	}
 	else
 	{
@@ -251,7 +347,7 @@ void Ship::ProcessWaypoints(float dt)
 b2Vec2 Ship::GetCurrentWaypoint() const
 {
 	if (mWaypoints.size() > 0)
-		return mWaypoints.front();
+		return mWaypoints.front().position;
 	else
 		return b2Vec2(-1.0f, -1.0f);
 }
@@ -261,31 +357,100 @@ void Ship::AddMovementPattern(int movementPattern, bool immediate)
 	switch (movementPattern)
 	{
 	case Attributes::MOVEMENT_CIRCLE:
-		break;
-	case Attributes::MOVEMENT_ZIGZAG:
+	{
 		if (immediate)
 			mWaypoints.clear();
 
 		b2Vec2 curPos = GetPosition(true);
 		float angle = GetAngle_NonRetarded(true);
-		//b2Vec2 curDir = mb2Body->GetWorldVector(mb2LocalInitVec);
-		//float angle = std::atan2f(curDir.x, -curDir.y);
-		//angle += MathHelper::DegreesToRadians(45.0f);
+
+		float dist = 5.0f;
+
+		float angleInc = 60.0f;
+
+		angle += MathHelper::DegreesToRadians(angleInc);
 
 		b2Vec2 newWaypoint;
-		newWaypoint.x = -((std::cos(angle))*10.0f + curPos.x);
-		newWaypoint.y = (std::sin(angle))*10.0f + curPos.y;
-		AddWaypoint(newWaypoint);
+		newWaypoint.x = (-(std::cos(angle))*dist + curPos.x);
+		newWaypoint.y = (std::sin(angle))*dist + curPos.y;
+		newWaypoint = AddWaypoint(b2Vec2(newWaypoint.x, newWaypoint.y));
 
-		//angle -= MathHelper::DegreesToRadians(90.0f);
+		angle += MathHelper::DegreesToRadians(angleInc);
 
-		/*
 		b2Vec2 newWaypoint2;
-		newWaypoint2.x = -((std::cos(angle)) + newWaypoint.x);
-		newWaypoint2.y = ((std::sin(angle)) + newWaypoint.y);
-		AddWaypoint(newWaypoint2);
-		*/
+		newWaypoint2.x = (-(std::cos(angle))*dist + newWaypoint.x);
+		newWaypoint2.y = (std::sin(angle))*dist + newWaypoint.y;
+		newWaypoint2 = AddWaypoint(b2Vec2(newWaypoint2.x, newWaypoint2.y));
+
+		angle += MathHelper::DegreesToRadians(angleInc);
+
+		b2Vec2 newWaypoint3;
+		newWaypoint3.x = (-(std::cos(angle))*dist + newWaypoint2.x);
+		newWaypoint3.y = ((std::sin(angle))*dist + newWaypoint2.y);
+		newWaypoint3 = AddWaypoint(b2Vec2(newWaypoint3.x, newWaypoint3.y));
+
+		angle += MathHelper::DegreesToRadians(angleInc);
+
+		b2Vec2 newWaypoint4;
+		newWaypoint4.x = (-(std::cos(angle))*dist + newWaypoint3.x);
+		newWaypoint4.y = ((std::sin(angle))*dist + newWaypoint3.y);
+		newWaypoint4 = AddWaypoint(b2Vec2(newWaypoint4.x, newWaypoint4.y));
+
+		angle += MathHelper::DegreesToRadians(angleInc);
+
+		b2Vec2 newWaypoint5;
+		newWaypoint5.x = (-(std::cos(angle))*dist + newWaypoint4.x);
+		newWaypoint5.y = ((std::sin(angle))*dist + newWaypoint4.y);
+		newWaypoint5 = AddWaypoint(b2Vec2(newWaypoint5.x, newWaypoint5.y));
+
+		angle += MathHelper::DegreesToRadians(angleInc);
+
+		b2Vec2 newWaypoint6;
+		newWaypoint6.x = (-(std::cos(angle))*dist + newWaypoint5.x);
+		newWaypoint6.y = ((std::sin(angle))*dist + newWaypoint5.y);
+		newWaypoint6 = AddWaypoint(b2Vec2(newWaypoint6.x, newWaypoint6.y));
 
 		break;
+	}
+	case Attributes::MOVEMENT_ZIGZAG:
+	{
+		if (immediate)
+			mWaypoints.clear();
+
+		b2Vec2 curPos = GetPosition(true);
+		float angle = ConstrainAngle180(GetAngle_NonRetarded(true));
+
+		float dist = 7.0f;
+
+		angle += MathHelper::DegreesToRadians(45.0f);
+
+		b2Vec2 newWaypoint;
+		newWaypoint.x = (-(std::cos(angle))*dist + curPos.x);
+		newWaypoint.y = (std::sin(angle))*dist + curPos.y;
+		newWaypoint = AddWaypoint(b2Vec2(newWaypoint.x, newWaypoint.y));
+
+		angle -= MathHelper::DegreesToRadians(90.0f);
+
+		b2Vec2 newWaypoint2;
+		newWaypoint2.x = (-(std::cos(angle))*dist + newWaypoint.x);
+		newWaypoint2.y = ((std::sin(angle))*dist + newWaypoint.y);
+		newWaypoint2 = AddWaypoint(b2Vec2(newWaypoint2.x, newWaypoint2.y));
+
+		angle += MathHelper::DegreesToRadians(90.0f);
+
+		b2Vec2 newWaypoint3;
+		newWaypoint3.x = (-(std::cos(angle))*dist + newWaypoint2.x);
+		newWaypoint3.y = ((std::sin(angle))*dist + newWaypoint2.y);
+		newWaypoint3 = AddWaypoint(b2Vec2(newWaypoint3.x, newWaypoint3.y));
+
+		angle -= MathHelper::DegreesToRadians(90.0f);
+
+		b2Vec2 newWaypoint4;
+		newWaypoint4.x = (-(std::cos(angle))*dist + newWaypoint3.x);
+		newWaypoint4.y = ((std::sin(angle))*dist + newWaypoint3.y);
+		newWaypoint4 = AddWaypoint(b2Vec2(newWaypoint4.x, newWaypoint4.y));
+
+		break;
+	}
 	}
 }

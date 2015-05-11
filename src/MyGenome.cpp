@@ -5,6 +5,16 @@ MyGenome::MyGenome()
 {
 	evaluator(Evaluate);
 	crossover(Cross);
+	mID = -1;
+}
+
+MyGenome::MyGenome(int id, float(*objectiveFunc)(GAGenome&, GAPopulation&, bool**))
+	: GAGenome(Init, Mutate, Compare)
+{
+	evaluator(Evaluate);
+	crossover(Cross);
+	mID = id;
+	mObjectiveFunc = objectiveFunc;
 }
 
 MyGenome::MyGenome(const MyGenome& orig)
@@ -60,11 +70,14 @@ float MyGenome::Compare(const GAGenome&, const GAGenome&)
 	return -1;
 }
 
-float MyGenome::Evaluate(GAGenome&)
+float MyGenome::Evaluate(GAGenome& genome)
 {
 	// TODO: Implement functionality
 
-	return -1;
+	// Objective function(GAPopulation& pop, bool** matches)
+
+	//return mObjectiveFunc(genome, mGaPop, mMatches);
+	return 1.0f;
 }
 
 int MyGenome::Cross(const GAGenome& _parent1, const GAGenome& _parent2,
@@ -95,4 +108,9 @@ int MyGenome::Cross(const GAGenome& _parent1, const GAGenome& _parent2,
 	}
 
 	return numOffspring;
+}
+
+int MyGenome::GetID() const
+{
+	return mID;
 }

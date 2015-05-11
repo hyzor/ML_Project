@@ -30,6 +30,7 @@ decimal genome.
 #include "TextureManager.h"
 #include "DebugDraw.h"
 #include "ContactListener.h"
+#include "MyGenome.h"
 
 /*
 #define _CRTDBG_MAP_ALLOC
@@ -62,7 +63,7 @@ static const std::string dir_fonts = dir_assets + "fonts/";
 #define ENTITY_INIT_HEIGHT 64
 
 int MyCrossoverFunc(const GAGenome& genome1, const GAGenome& genome2, GAGenome* result);
-float MyObjectiveFunc(GAGenome &);
+float MyObjectiveFunc(GAGenome& c, GAPopulation& pop, bool** matches);
 
 int main(int argc, char **argv)
 {
@@ -191,8 +192,26 @@ int main(int argc, char **argv)
 	// Entity
 	//Ship* myShip = new Ship(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, ENTITY_INIT_WIDTH, ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, gfx_entity, &box2D_world);
 
-	Ship* myShip = world->SpawnEntity<Ship>(0.0f, WINDOW_HEIGHT/2, ENTITY_INIT_WIDTH,
-		ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, MathHelper::DegreesToRadians(90.0f), textureManager->LoadTexture("Ship.png"));
+	Ship* myShip = world->SpawnEntity<Ship>(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, ENTITY_INIT_WIDTH,
+		ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, 0.0f, textureManager->LoadTexture("Ship.png"));
+
+	GAPopulation* gaPop = new GAPopulation();
+	gaPop->initialize();
+	gaPop->add(new MyGenome(0, &MyObjectiveFunc));
+	gaPop->add(new MyGenome(1, &MyObjectiveFunc));
+
+	bool** matches;
+	matches = (bool**)malloc(gaPop->size() * sizeof(bool*));
+
+	for (int i = 0; i < gaPop->size(); ++i)
+	{
+		matches[i] = (bool*)malloc(gaPop->size() * sizeof(bool));
+	}
+
+	for (int i = 0; i < gaPop->size(); ++i)
+	{
+		gaPop->individual(i).initialize();
+	}
 
 	/*
 	myShip->AddWaypoint(b2Vec2(0.0f, 0.0f));
@@ -202,7 +221,11 @@ int main(int argc, char **argv)
 	myShip->AddWaypoint(b2Vec2(0.0f, WINDOW_HEIGHT*Box2dHelper::Units));
 	*/
 
-	myShip->AddMovementPattern(Ship::Attributes::MOVEMENT_ZIGZAG, true);
+	//myShip->AddWaypoint(b2Vec2((-200.0f)*Box2dHelper::Units, (WINDOW_HEIGHT / 2)*Box2dHelper::Units));
+	//myShip->AddWaypoint(b2Vec2((WINDOW_WIDTH / 2)*Box2dHelper::Units, (-20.0f)*Box2dHelper::Units));
+	//myShip->AddWaypoint(b2Vec2((WINDOW_WIDTH / 2)*Box2dHelper::Units, (-10.0f)*Box2dHelper::Units));
+
+	//myShip->AddMovementPattern(Ship::Attributes::MOVEMENT_CIRCLE, true);
 
 	//Ship* enemyShip = world->SpawnEntity<Ship>(WINDOW_WIDTH / 3, WINDOW_HEIGHT / 2, ENTITY_INIT_WIDTH,
 		//ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, MathHelper::DegreesToRadians(90.0f), textureManager->LoadTexture("Ship.png"));
@@ -231,12 +254,13 @@ int main(int argc, char **argv)
     map.add(16, -5, 5);
 
 	// Create the template genome using the phenotype map we just made.
-	GABin2DecGenome genome(map, MyObjectiveFunc);
+	//GABin2DecGenome genome(map, MyObjectiveFunc);
 
-	// Now create the GA using the genome and run it.  We'll use sigma truncation
-	// scaling so that we can handle negative objective scores.
-	MyGA ga(genome);
+	// Create ga with the initial population
+	MyGA ga(*gaPop);
+
     //GASimpleGA ga(genome);
+	//ga.objectiveFunction(MyObjectiveFunc);
 	ga.crossover(MyCrossoverFunc);
     GASigmaTruncationScaling scaling;
     ga.populationSize(POPULATION_SIZE);
@@ -254,15 +278,17 @@ int main(int argc, char **argv)
 	while (!ga.done())
 	{
 		ga.step();
-		genome = ga.statistics().bestIndividual();
-		std::cout << genome.phenotype(0) << ", " << genome.phenotype(1) << "\n";
+		//genome = ga.statistics().bestIndividual();
+		//std::cout << genome.phenotype(0) << ", " << genome.phenotype(1) << "\n";
 	}
 
 	// Dump the results of the GA to the screen.
+	/*
     genome = ga.statistics().bestIndividual();
 	std::cout << "the ga found an optimum at the point (";
 	std::cout << genome.phenotype(0) << ", " << genome.phenotype(1) << ")\n\n";
 	std::cout << "best of generation data are in '" << ga.scoreFilename() << "'\n";
+	*/
 
 	std::cout << ga.statistics() << "\n";
 
@@ -421,14 +447,24 @@ int main(int argc, char **argv)
 			gfx_text_debug->Render(0, 120, renderer);
 		}
 
-		if (gfx_text_debug->CreateFromText("WaypointX (m): " + std::to_string(myShip->GetCurrentWaypoint().x*Box2dHelper::Units), { 255, 255, 255 }, font, renderer))
+		if (gfx_text_debug->CreateFromText("WaypointX (m): " + std::to_string(myShip->GetCurrentWaypoint().x), { 255, 255, 255 }, font, renderer))
 		{
 			gfx_text_debug->Render(0, 140, renderer);
 		}
 
-		if (gfx_text_debug->CreateFromText("WaypointY (m): " + std::to_string(myShip->GetCurrentWaypoint().y*Box2dHelper::Units), { 255, 255, 255 }, font, renderer))
+		if (gfx_text_debug->CreateFromText("WaypointY (m): " + std::to_string(myShip->GetCurrentWaypoint().y), { 255, 255, 255 }, font, renderer))
 		{
 			gfx_text_debug->Render(0, 160, renderer);
+		}
+
+		if (gfx_text_debug->CreateFromText("WaypointX (px): " + std::to_string(myShip->GetCurrentWaypoint().x*Box2dHelper::PixelsPerMeter), { 255, 255, 255 }, font, renderer))
+		{
+			gfx_text_debug->Render(0, 180, renderer);
+		}
+
+		if (gfx_text_debug->CreateFromText("WaypointY (px): " + std::to_string(myShip->GetCurrentWaypoint().y*Box2dHelper::PixelsPerMeter), { 255, 255, 255 }, font, renderer))
+		{
+			gfx_text_debug->Render(0, 200, renderer);
 		}
 
 		SDL_RenderPresent(renderer);
@@ -444,6 +480,13 @@ int main(int argc, char **argv)
 	{
 		delete contactListener;
 		contactListener = nullptr;
+	}
+
+	if (gaPop)
+	{
+		gaPop->destroy();
+		delete gaPop;
+		gaPop = nullptr;
 	}
 
 	world = nullptr;
@@ -486,12 +529,33 @@ int MyCrossoverFunc(const GAGenome& genome1, const GAGenome& genome2, GAGenome* 
 ///
 ///                  y = -(x1*x1 + x2*x2)
 ///
-float MyObjectiveFunc(GAGenome & c)
+float MyObjectiveFunc(GAGenome& c, GAPopulation& pop, bool** matches)
 {
+	MyGenome* myGenome = static_cast<MyGenome*>(&c);
+	float score = 0.0f;
+
+	for (int i = 0; i < pop.size(); ++i)
+	{
+		MyGenome* genome = static_cast<MyGenome*>(&pop.individual(i));
+
+		if (matches[myGenome->GetID()][i] == false)
+		{
+			if (myGenome->GetID() > genome->GetID())
+			{
+				score += 1.0f;
+			}
+		}
+	}
+
+	return score;
+	/*
     GABin2DecGenome & genome = (GABin2DecGenome &)c;
 
     float y;
     y = -genome.phenotype(0) * genome.phenotype(0);
     y -= genome.phenotype(1) * genome.phenotype(1);
     return y;
+	*/
+
+
 }

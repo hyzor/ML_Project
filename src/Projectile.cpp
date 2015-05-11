@@ -32,7 +32,7 @@ void Projectile::Init(float lifetime)
 
 	//b2Vec2 forceDirection = mb2Body->GetWorldVector(b2Vec2(0, 1));
 
-	b2Vec2 force = b2Vec2(-(std::cos(GetAngle(true) - 4.7f)), -(std::sin(GetAngle(true) - 4.7f)));
+	b2Vec2 force = b2Vec2(-(std::cos(GetAngle(true))), -(std::sin(GetAngle(true))));
 	force.Normalize();
 	force *= magnitude;
 
