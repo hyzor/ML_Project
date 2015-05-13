@@ -10,6 +10,8 @@
 #include "World.h"
 #include "TextureManager.h"
 
+class World;
+
 class Ship : public Entity
 {
 public:
@@ -79,9 +81,9 @@ private:
 	float mCooldown;
 	float mCurCooldown;
 
-	bool mEventTriggers[Events::NUM_EVENTS];
+	void InitShip();
 
-	void Init();
+	bool mEventTriggers[Events::NUM_EVENTS];
 	bool Shoot();
 
 	b2Vec2 GetCorrectionWaypoint(b2Vec2 waypoint);

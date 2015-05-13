@@ -137,16 +137,16 @@ void Entity::Update(float dt)
 		mIsAlive = false;
 	}
 
-	if (GetPosition(false).y < 0)
-		SetPosition(b2Vec2(GetPosition(true).x, 480.0f*Box2dHelper::Units));
+	if (GetPosition(true).y < 0.0f)
+		SetPosition(b2Vec2(GetPosition(true).x, 600.0f*Box2dHelper::Units));
 
-	if (GetPosition(false).y > 480.0f)
+	if (GetPosition(true).y > 600.0f * Box2dHelper::Units)
 		SetPosition(b2Vec2(GetPosition(true).x, 0.0f));
 
-	if (GetPosition(false).x < 0.0f)
-		SetPosition(b2Vec2(640.0f * Box2dHelper::Units, GetPosition(true).y));
+	if (GetPosition(true).x < 0.0f)
+		SetPosition(b2Vec2(800.0f * Box2dHelper::Units, GetPosition(true).y));
 
-	if (GetPosition(false).x > 640.0f)
+	if (GetPosition(true).x > 800.0f * Box2dHelper::Units)
 		SetPosition(b2Vec2(0.0f, GetPosition(true).y));
 }
 

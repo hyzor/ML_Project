@@ -5,11 +5,11 @@
 
 #include "Entity.h"
 
-class ContactListener : public b2ContactListener
+class MyB2ContactListener : public b2ContactListener
 {
 public:
-	ContactListener();
-	~ContactListener();
+	MyB2ContactListener();
+	~MyB2ContactListener();
 
 	void BeginContact(b2Contact* contact);
 	void EndContact(b2Contact* contact);

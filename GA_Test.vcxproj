@@ -11,9 +11,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\ContactListener.cpp" />
-    <ClCompile Include="src\DebugDraw.cpp" />
+    <ClCompile Include="src\MyB2ContactListener.cpp" />
+    <ClCompile Include="src\MyB2DebugDraw.cpp" />
     <ClCompile Include="src\Entity.cpp" />
+    <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Ship.cpp" />
     <ClCompile Include="src\MyGA.cpp" />
@@ -24,10 +25,11 @@
     <ClCompile Include="src\World.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\ContactListener.h" />
-    <ClInclude Include="src\DebugDraw.h" />
+    <ClInclude Include="src\MyB2ContactListener.h" />
+    <ClInclude Include="src\MyB2DebugDraw.h" />
     <ClInclude Include="src\Common.h" />
     <ClInclude Include="src\Entity.h" />
+    <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\Ship.h" />
     <ClInclude Include="src\MyGA.h" />
     <ClInclude Include="src\MyGenome.h" />

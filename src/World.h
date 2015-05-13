@@ -14,7 +14,7 @@ class World
 public:
 	static World* GetInstance();
 
-	void Init(b2World* _b2World);
+	void Init(b2World* _b2World, unsigned int width, unsigned int height);
 	static void Destroy();
 
 	void Clear();
@@ -26,6 +26,9 @@ public:
 	void Update(float dt);
 	void Draw(SDL_Renderer* renderer);
 
+	unsigned int GetWidth() const;
+	unsigned int GetHeight() const;
+
 private:
 	World();
 	~World();
@@ -34,6 +37,8 @@ private:
 
 	b2World* mb2World;
 	std::vector<Entity*> mEntities;
+
+	unsigned int mWidth, mHeight;
 
 	static bool HasInstance();
 };

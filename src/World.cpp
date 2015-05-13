@@ -17,9 +17,11 @@ bool World::HasInstance()
 	return mInstance != nullptr;
 }
 
-void World::Init(b2World* _b2World)
+void World::Init(b2World* _b2World, unsigned int width, unsigned int height)
 {
 	mb2World = _b2World;
+	mWidth = width;
+	mHeight = height;
 }
 
 void World::Destroy()
@@ -72,6 +74,16 @@ void World::Draw(SDL_Renderer* renderer)
 	{
 		mEntities[i]->Draw(renderer);
 	}
+}
+
+unsigned int World::GetWidth() const
+{
+	return mWidth;
+}
+
+unsigned int World::GetHeight() const
+{
+	return mHeight;
 }
 
 World::World()

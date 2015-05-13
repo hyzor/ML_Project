@@ -6,21 +6,21 @@
 // Some slight modifications have been made.
 //===========================================================================
 
-#include "DebugDraw.h"
+#include "MyB2DebugDraw.h"
 
 
-DebugDraw::DebugDraw(SDL_Renderer* renderer, Uint8 alpha)
+MyB2DebugDraw::MyB2DebugDraw(SDL_Renderer* renderer, Uint8 alpha)
 {
 	mSdlRenderer = renderer;
 	mAlpha = alpha;
 }
 
 
-DebugDraw::~DebugDraw()
+MyB2DebugDraw::~MyB2DebugDraw()
 {
 }
 
-void DebugDraw::Polygon(int(*f)(SDL_Renderer*, const Sint16*, const Sint16*, int, Uint8, Uint8, Uint8, Uint8), const b2Vec2 *vertices, int32 vertexCount, const b2Color &color, const Uint8 a)
+void MyB2DebugDraw::Polygon(int(*f)(SDL_Renderer*, const Sint16*, const Sint16*, int, Uint8, Uint8, Uint8, Uint8), const b2Vec2 *vertices, int32 vertexCount, const b2Color &color, const Uint8 a)
 {
 	Uint8 r = Uint8(color.r * 255);
 	Uint8 g = Uint8(color.g * 255);
@@ -43,7 +43,7 @@ void DebugDraw::Polygon(int(*f)(SDL_Renderer*, const Sint16*, const Sint16*, int
 	delete[] vy;
 }
 
-void DebugDraw::Circle(int(*f)(SDL_Renderer*, Sint16, Sint16, Sint16, Uint8, Uint8, Uint8, Uint8), const b2Vec2 &center, float32 radius, const b2Color &color, const Uint8 a)
+void MyB2DebugDraw::Circle(int(*f)(SDL_Renderer*, Sint16, Sint16, Sint16, Uint8, Uint8, Uint8, Uint8), const b2Vec2 &center, float32 radius, const b2Color &color, const Uint8 a)
 {
 	Uint8 r = Uint8(color.r * 255);
 	Uint8 g = Uint8(color.g * 255);
@@ -59,27 +59,27 @@ void DebugDraw::Circle(int(*f)(SDL_Renderer*, Sint16, Sint16, Sint16, Uint8, Uin
 	f(mSdlRenderer, x, y, radiusPx, r, g, b, a);
 }
 
-void DebugDraw::DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color)
+void MyB2DebugDraw::DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color)
 {
 	Polygon(polygonRGBA, vertices, vertexCount, color, mAlpha);
 }
 
-void DebugDraw::DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color)
+void MyB2DebugDraw::DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color)
 {
 	Polygon(filledPolygonRGBA, vertices, vertexCount, color, mAlpha);
 }
 
-void DebugDraw::DrawCircle(const b2Vec2& center, float32 radius, const b2Color& color)
+void MyB2DebugDraw::DrawCircle(const b2Vec2& center, float32 radius, const b2Color& color)
 {
 	Circle(circleRGBA, center, radius, color, mAlpha);
 }
 
-void DebugDraw::DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Vec2& axis, const b2Color& color)
+void MyB2DebugDraw::DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Vec2& axis, const b2Color& color)
 {
 	Circle(filledCircleRGBA, center, radius, color, mAlpha);
 }
 
-void DebugDraw::DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color)
+void MyB2DebugDraw::DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color)
 {
 	Uint8 r = Uint8(color.r * 255);
 	Uint8 g = Uint8(color.g * 255);
@@ -98,7 +98,7 @@ void DebugDraw::DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& c
 		static_cast<Sint16>(pixels2.y), r, g, b, mAlpha);
 }
 
-void DebugDraw::DrawTransform(const b2Transform& xf)
+void MyB2DebugDraw::DrawTransform(const b2Transform& xf)
 {
 	//throw std::logic_error("The method or operation is not implemented.");
 }

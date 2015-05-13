@@ -1,16 +1,16 @@
-#include "ContactListener.h"
+#include "MyB2ContactListener.h"
 
 
-ContactListener::ContactListener()
+MyB2ContactListener::MyB2ContactListener()
 {
 }
 
 
-ContactListener::~ContactListener()
+MyB2ContactListener::~MyB2ContactListener()
 {
 }
 
-void ContactListener::BeginContact(b2Contact* contact)
+void MyB2ContactListener::BeginContact(b2Contact* contact)
 {
 	void* userdata1 = contact->GetFixtureA()->GetBody()->GetUserData();
 	void* userdata2 = contact->GetFixtureB()->GetBody()->GetUserData();
@@ -31,7 +31,7 @@ void ContactListener::BeginContact(b2Contact* contact)
 	}
 }
 
-void ContactListener::EndContact(b2Contact* contact)
+void MyB2ContactListener::EndContact(b2Contact* contact)
 {
 
 }

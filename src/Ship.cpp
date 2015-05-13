@@ -3,19 +3,19 @@
 Ship::Ship()
 	: Entity()
 {
-	Init();
+	InitShip();
 }
 
 Ship::Ship(float x, float y, int width, int height, int health, int damage, float angle, SDL_Wrapper::Texture* texture, b2World* world)
 	: Entity(x, y, width, height, health, damage, angle, texture, world)
 {
-	Init();
+	InitShip();
 }
 
 void Ship::Update(float dt)
 {
-	if (GetPosition(false).y < 0 || GetPosition(false).y > 480.0f
-		|| GetPosition(false).x < 0.0f || GetPosition(false).x > 640.0f)
+	if (GetPosition(true).y < 0.0f || GetPosition(true).y > (600.0f * Box2dHelper::Units)
+		|| GetPosition(true).x < 0.0f || GetPosition(true).x > (800.0f * Box2dHelper::Units))
 	{
 		if (mWaypoints.size() > 0)
 		{
@@ -91,7 +91,7 @@ void Ship::Update(float dt)
 	}
 }
 
-void Ship::Init()
+void Ship::InitShip()
 {
 	mTorque = 30.0f;
 	mMagnitude = 20.0f;
@@ -273,8 +273,8 @@ b2Vec2 Ship::AddWaypoint(b2Vec2 waypoint)
 {
 	b2Vec2 intermediateWaypoint = waypoint;
 
-	float boundW = 640.0f * Box2dHelper::Units;
-	float boundH = 480.0f * Box2dHelper::Units;
+	float boundW = 800.0f * Box2dHelper::Units;
+	float boundH = 600.0f * Box2dHelper::Units;
 
 	if (waypoint.x < 0.0f)
 	{

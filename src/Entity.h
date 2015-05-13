@@ -15,8 +15,6 @@ public:
 	Entity(float x, float y, int width, int height, int health, int damage, float angle, SDL_Wrapper::Texture* texture, b2World* world);
 	virtual ~Entity();
 
-	bool Init();
-
 	b2Body* Getb2Body() const;
 
 	b2Vec2 GetPosition(bool inMeters) const;

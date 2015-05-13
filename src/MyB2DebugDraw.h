@@ -7,11 +7,11 @@
 
 #include "Common.h"
 
-class DebugDraw : public b2Draw
+class MyB2DebugDraw : public b2Draw
 {
 public:
-	DebugDraw(SDL_Renderer* renderer, Uint8 alpha = 150);
-	~DebugDraw();
+	MyB2DebugDraw(SDL_Renderer* renderer, Uint8 alpha = 150);
+	~MyB2DebugDraw();
 
 	void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color);
 
