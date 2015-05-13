@@ -6,14 +6,16 @@
 #include <ga/garandom.h>
 #include <ga/GASStateGA.h>
 
-typedef int(*CrossoverFunc)(const GAGenome&, const GAGenome&, GAGenome*);
+#include "MyGenome.h"
+
+typedef int(*CrossoverFunc)(const GAGenome&, const GAGenome&, GAGenome*, GAGenome*);
 
 class MyGA : public GASteadyStateGA
 {
 public:
 
-	MyGA(const GAGenome& genome) : GASteadyStateGA(genome) {}
-	MyGA(const GAPopulation& pop) : GASteadyStateGA(pop) {}
+	MyGA(const GAGenome& genome);
+	MyGA(const GAPopulation& pop);
 	virtual ~MyGA() {}
 	virtual void step();
 	MyGA& operator++() { step(); return *this; }

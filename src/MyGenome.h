@@ -20,7 +20,7 @@ public:
 
 public:
 	MyGenome();
-	MyGenome(int id, float(*objectiveFunc)(GAGenome&, GAPopulation&, bool**));
+	MyGenome(int id);
 	MyGenome(const MyGenome& orig);
 	virtual ~MyGenome();
 
@@ -33,12 +33,10 @@ public:
 	int GetID() const;
 public:
 	// Custom data for MyGenome
+	int mTotalMatchesWon;
+	int mCurMatchesWon;
 protected:
 	int mID;
-
-	GAPopulation* mGaPop;
-	bool** mMatches;
-	float(*mObjectiveFunc)(GAGenome&, GAPopulation&, bool**);
 };
 
 #endif

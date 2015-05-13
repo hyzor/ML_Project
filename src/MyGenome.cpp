@@ -6,15 +6,18 @@ MyGenome::MyGenome()
 	evaluator(Evaluate);
 	crossover(Cross);
 	mID = -1;
+	mTotalMatchesWon = 0;
+	mCurMatchesWon = 0;
 }
 
-MyGenome::MyGenome(int id, float(*objectiveFunc)(GAGenome&, GAPopulation&, bool**))
+MyGenome::MyGenome(int id)
 	: GAGenome(Init, Mutate, Compare)
 {
 	evaluator(Evaluate);
 	crossover(Cross);
 	mID = id;
-	mObjectiveFunc = objectiveFunc;
+	mTotalMatchesWon = 0;
+	mCurMatchesWon = 0;
 }
 
 MyGenome::MyGenome(const MyGenome& orig)
@@ -42,30 +45,35 @@ void MyGenome::copy(const GAGenome& orig)
 	// Copy base genome parts
 	GAGenome::copy(orig);
 
-	// Copy parts of MyEntity
-
 	// Copy parts of MyGenome
+	MyGenome* origMyGenome = (MyGenome*)&orig;
+	mID = origMyGenome->GetID();
+
+	// Copy parts of Ship
 }
 
 MyGenome::~MyGenome()
 {
 }
 
-void MyGenome::Init(GAGenome&)
+void MyGenome::Init(GAGenome& genome)
 {
 	// TODO: Implement functionality
 }
 
-int MyGenome::Mutate(GAGenome&, float)
+int MyGenome::Mutate(GAGenome& genome, float probability)
 {
 	// TODO: Implement functionality
 
 	return -1;
 }
 
-float MyGenome::Compare(const GAGenome&, const GAGenome&)
+float MyGenome::Compare(const GAGenome& genome1, const GAGenome& genome2)
 {
 	// TODO: Implement functionality
+
+	// Measure and return the "distance" of the two genomes
+	// Used for measuring diversity
 
 	return -1;
 }
@@ -74,16 +82,19 @@ float MyGenome::Evaluate(GAGenome& genome)
 {
 	// TODO: Implement functionality
 
-	// Objective function(GAPopulation& pop, bool** matches)
+	// Return some "score" based on the properties of this genome
 
-	//return mObjectiveFunc(genome, mGaPop, mMatches);
-	return 1.0f;
+	MyGenome* myGenome = (MyGenome*)&genome;
+
+	float score = myGenome->mCurMatchesWon;
+
+	return score;
 }
 
 int MyGenome::Cross(const GAGenome& _parent1, const GAGenome& _parent2,
 	GAGenome* _result1, GAGenome* _result2)
 {
-	// TODO: Fix so that offsprings randomly inherit attributes etc
+	// TODO: Fix so that offsprings randomly inherit attributes, etc,
 	// from both parents
 
 	MyGenome& parent1 = (MyGenome&)_parent1;

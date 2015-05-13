@@ -62,20 +62,11 @@ static const std::string dir_fonts = dir_assets + "fonts/";
 #define ENTITY_INIT_WIDTH 48
 #define ENTITY_INIT_HEIGHT 64
 
-int MyCrossoverFunc(const GAGenome& genome1, const GAGenome& genome2, GAGenome* result);
-float MyObjectiveFunc(GAGenome& c, GAPopulation& pop, bool** matches);
+//int MyCrossoverFunc(const GAGenome& genome1, const GAGenome& genome2, GAGenome* result);
+//float MyObjectiveFunc(GAPopulation& pop);
 
 int main(int argc, char **argv)
 {
-    std::cout << "Example 9\n\n";
-	std::cout << "This program finds the maximum value in the function\n";
-	std::cout << "  y = - x1^2 - x2^2\n";
-	std::cout << "with the constraints\n";
-	std::cout << "     -5 <= x1 <= 5\n";
-	std::cout << "     -5 <= x2 <= 5\n";
-	std::cout << "\n\n";
-	std::cout.flush();
-
 	bool gameIsRunning = true;
 
 	// SDL
@@ -94,7 +85,7 @@ int main(int argc, char **argv)
 	ContactListener* contactListener = nullptr;
 
 	// Fonts
-	TTF_Font* font;
+	TTF_Font* font = nullptr;
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
@@ -134,36 +125,12 @@ int main(int argc, char **argv)
 	// Open ttf font
 	font = TTF_OpenFont((dir_fonts + "OpenSans-Regular.ttf").c_str(), 12);
 
-	/*
-	screenSurface = SDL_GetWindowSurface(window);
-	if (!screenSurface)
-		return -1;
-		*/
-
-	//background = SDL_Wrapper::LoadSurface(dir_assets + "Background.bmp", screenSurface);
-	//gfx_entity = SDL_Wrapper::LoadSurface(dir_assets + "Ship.bmp", screenSurface);
-	/*
-	gfx_ship = new SDL_Wrapper::Texture();
-	gfx_ship->LoadFromFile(dir_assets + "Ship.png", renderer);
-
-	gfx_background = new SDL_Wrapper::Texture();
-	gfx_background->LoadFromFile(dir_assets + "Background.png", renderer);
-
-	gfx_text_debug = new SDL_Wrapper::Texture();
-
-	gfx_projectile = new SDL_Wrapper::Texture();
-	gfx_projectile->LoadFromFile(dir_assets + "Projectile.png", renderer);
-	*/
-
 	textureManager = TextureManager::GetInstance();
 	textureManager->Init(renderer, dir_assets);
 
 	gfx_text_debug = new SDL_Wrapper::Texture();
 
-	//textureManager->LoadTexture("Ship.png");
 	gfx_background = TextureManager::GetInstance()->LoadTexture("Background.png");
-	//textureManager->LoadTexture("Projectile.png");
-
 
 	// Game variables
 	float dt = 1.0f / 60.0f;
@@ -190,27 +157,20 @@ int main(int argc, char **argv)
 	world->Init(box2Dworld);
 
 	// Entity
-	//Ship* myShip = new Ship(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, ENTITY_INIT_WIDTH, ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, gfx_entity, &box2D_world);
-
 	Ship* myShip = world->SpawnEntity<Ship>(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, ENTITY_INIT_WIDTH,
 		ENTITY_INIT_HEIGHT, ENTITY_INIT_HP, ENTITY_INIT_DMG, 0.0f, textureManager->LoadTexture("Ship.png"));
 
 	GAPopulation* gaPop = new GAPopulation();
+	MyGenome* myGenome1 = new MyGenome(10);
+	MyGenome* myGenome2 = new MyGenome(1);
 	gaPop->initialize();
-	gaPop->add(new MyGenome(0, &MyObjectiveFunc));
-	gaPop->add(new MyGenome(1, &MyObjectiveFunc));
-
-	bool** matches;
-	matches = (bool**)malloc(gaPop->size() * sizeof(bool*));
+	gaPop->add(myGenome1);
+	gaPop->add(myGenome2);
 
 	for (int i = 0; i < gaPop->size(); ++i)
 	{
-		matches[i] = (bool*)malloc(gaPop->size() * sizeof(bool));
-	}
-
-	for (int i = 0; i < gaPop->size(); ++i)
-	{
-		gaPop->individual(i).initialize();
+		MyGenome* myGenome = (MyGenome*)&gaPop->individual(i);
+		myGenome->initialize();
 	}
 
 	/*
@@ -244,53 +204,39 @@ int main(int argc, char **argv)
         }
     }
 
-	// Create a phenotype for two variables.  The number of bits you can use to
-	// represent any number is limited by the type of computer you are using.  In
-	// this case, we use 16 bits to represent a floating point number whose value
-	// can range from -5 to 5, inclusive.  The bounds on x1 and x2 can be applied
-	// here and/or in the objective function.
-    GABin2DecPhenotype map;
-    map.add(16, -5, 5);
-    map.add(16, -5, 5);
-
-	// Create the template genome using the phenotype map we just made.
-	//GABin2DecGenome genome(map, MyObjectiveFunc);
-
 	// Create ga with the initial population
-	MyGA ga(*gaPop);
+	MyGA* myGA = new MyGA(*gaPop);
 
     //GASimpleGA ga(genome);
 	//ga.objectiveFunction(MyObjectiveFunc);
-	ga.crossover(MyCrossoverFunc);
-    GASigmaTruncationScaling scaling;
-    ga.populationSize(POPULATION_SIZE);
-    ga.nGenerations(NUM_GENERATIONS);
-    ga.pMutation(PROB_MUTATION);
-    ga.pCrossover(PROB_CROSSOVER);
-    ga.scaling(scaling);
-	ga.scoreFilename(FILENAME_SCORE);
-    ga.scoreFrequency(FREQ_SCORE);
-    ga.flushFrequency(FREQ_FLUSH);
-	ga.selectScores(GAStatistics::AllScores);
+	myGA->crossover(MyGenome::Cross);
+    //GASigmaTruncationScaling scaling;
+	//myGA->populationSize(POPULATION_SIZE);
+	myGA->nGenerations(NUM_GENERATIONS);
+	myGA->pMutation(PROB_MUTATION);
+	myGA->pCrossover(PROB_CROSSOVER);
+    //ga.scaling(scaling);
+	myGA->scoreFilename(FILENAME_SCORE);
+	myGA->scoreFrequency(FREQ_SCORE);
+	myGA->flushFrequency(FREQ_FLUSH);
+	myGA->selectScores(GAStatistics::AllScores);
     //ga.evolve(seed);
 
 	// Evolve by explicitly calling the GA step function
-	while (!ga.done())
+	while (!myGA->done())
 	{
-		ga.step();
+		myGA->step();
 		//genome = ga.statistics().bestIndividual();
 		//std::cout << genome.phenotype(0) << ", " << genome.phenotype(1) << "\n";
 	}
 
 	// Dump the results of the GA to the screen.
-	/*
-    genome = ga.statistics().bestIndividual();
-	std::cout << "the ga found an optimum at the point (";
-	std::cout << genome.phenotype(0) << ", " << genome.phenotype(1) << ")\n\n";
-	std::cout << "best of generation data are in '" << ga.scoreFilename() << "'\n";
-	*/
+	MyGenome* genome = (MyGenome*)&myGA->statistics().bestIndividual();
+	std::cout << "The best individual is genome " << genome->GetID() << "\n";
+	std::cout << "Best of generation data is in file '" << myGA->scoreFilename() << "'\n";
 
-	std::cout << ga.statistics() << "\n";
+	// Dump statistics
+	//std::cout << ga.statistics() << "\n";
 
 	while (gameIsRunning)
 	{
@@ -489,6 +435,12 @@ int main(int argc, char **argv)
 		gaPop = nullptr;
 	}
 
+	if (myGA)
+	{
+		delete myGA;
+		myGA = nullptr;
+	}
+
 	world = nullptr;
 	//world->Clear();
 	World::Destroy();
@@ -517,19 +469,20 @@ int main(int argc, char **argv)
     return 0;
 }
 
-int MyCrossoverFunc(const GAGenome& genome1, const GAGenome& genome2, GAGenome* result)
+/*
+int MyCrossoverFunc(const GAGenome& genome1, const GAGenome& genome2, GAGenome* result, GAGenome* result2)
 {
-	//GA1DArrayGenome
+	MyGenome myGenome1 = (MyGenome&)genome1;
+	MyGenome myGenome2 = (MyGenome&)genome2;
+
+	myGenome1.cr
 
 	return 1;
 }
+*/
 
-
-/// This objective function tries to maximize the value of the function
-///
-///                  y = -(x1*x1 + x2*x2)
-///
-float MyObjectiveFunc(GAGenome& c, GAPopulation& pop, bool** matches)
+/*
+float MyObjectiveFunc(GAGenome& genome, GAPopulation& pop)
 {
 	MyGenome* myGenome = static_cast<MyGenome*>(&c);
 	float score = 0.0f;
@@ -548,14 +501,5 @@ float MyObjectiveFunc(GAGenome& c, GAPopulation& pop, bool** matches)
 	}
 
 	return score;
-	/*
-    GABin2DecGenome & genome = (GABin2DecGenome &)c;
-
-    float y;
-    y = -genome.phenotype(0) * genome.phenotype(0);
-    y -= genome.phenotype(1) * genome.phenotype(1);
-    return y;
-	*/
-
-
 }
+*/
