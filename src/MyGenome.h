@@ -4,6 +4,7 @@
 #include <ga/ga.h>
 #include <ga/GAGenome.h>
 #include <ga/GARealGenome.h>
+#include <ga/GA1DArrayGenome.h>
 #include "Ship.h"
 
 // Custom genome class which is derived from a custom entity class
@@ -20,7 +21,7 @@ public:
 
 public:
 	MyGenome();
-	MyGenome(int id);
+	MyGenome(int id, GARealAlleleSetArray& setArray);
 	MyGenome(const MyGenome& orig);
 	virtual ~MyGenome();
 
@@ -31,12 +32,21 @@ public:
 
 	// Custom functions for MyGenome
 	int GetID() const;
+	GABoolean IsEvaluated() const;
+	GARealAlleleSetArray* GetAlleleSetArray() const;
+
+	GA1DArrayAlleleGenome<float>* Get1DArrayAlleleGenome() const;
+	
 public:
 	// Custom data for MyGenome
 	int mTotalMatchesWon;
 	int mCurMatchesWon;
+
 protected:
 	int mID;
+
+	GARealAlleleSetArray* mAlleleSetArray;
+	GA1DArrayAlleleGenome<float>* m1DArrayAlleleGenome;
 };
 
 #endif

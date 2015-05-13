@@ -66,10 +66,19 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	//mPlayerShip->AddMovementPattern(Ship::MOVEMENT_ZIGZAG, true);
 	//mPlayerShip->Init(mWorld);
 
+	GARealAlleleSetArray setArray;
+	setArray.add(0.0f, 1.0f);
+	setArray.add(0.0f, 1.0f);
+	setArray.add(0.0f, 10.0f);
+	setArray.add(0.0f, 10.0f);
+
+	//float test = setArray.set(0).allele();
+	//std::cout << test << "\n";
+
 	// GA population
 	mGaPop = new GAPopulation();
-	MyGenome* myGenome1 = new MyGenome(10);
-	MyGenome* myGenome2 = new MyGenome(1);
+	MyGenome* myGenome1 = new MyGenome(10, setArray);
+	MyGenome* myGenome2 = new MyGenome(1, setArray);
 	mGaPop->initialize();
 	mGaPop->add(myGenome1);
 	mGaPop->add(myGenome2);

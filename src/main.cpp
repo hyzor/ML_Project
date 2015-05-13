@@ -17,6 +17,8 @@ decimal genome.
 #include <string>
 #include <cmath>
 #include <vector>
+#include <ctime>
+#include <stdlib.h>
 
 #include <ga/ga.h>
 #include <SDL/SDL.h>
@@ -149,17 +151,11 @@ int main(int argc, char **argv)
 
 	vec2 curMouseClickPos;
 
-	// See if we've been given a seed to use (for testing purposes).  When you
-	// specify a random seed, the evolution will be exactly the same each time
-	// you use that seed number.
-    unsigned int seed = 0;
-    for(int i = 1; i < argc; i++)
-    {
-        if(strcmp(argv[i++], "seed") == 0)
-        {
-            seed = atoi(argv[i]);
-        }
-    }
+	srand(time(NULL));
+
+	int randVal = rand() % 1000;
+
+	GARandomSeed(randVal);
 
 	while (gameIsRunning)
 	{

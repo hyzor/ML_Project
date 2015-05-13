@@ -68,20 +68,42 @@ void MyGA::step()
 	{
 		MyGenome* myGenome = (MyGenome*)&pop->individual(i);
 
+		int k;
+		float geneSum = 0.0f;
+		float geneSum2 = 0.0f;
+		for (k = 0; k < myGenome->Get1DArrayAlleleGenome()->length(); ++k)
+		{
+			geneSum += myGenome->Get1DArrayAlleleGenome()->gene(i);
+		}
+
+		/*
+		if (myGenome->IsEvaluated())
+		{
+			continue;
+		}
+		*/
+
 		for (int j = i; j < pop->size(); ++j)
 		{
 			if (i != j)
 			{
 				MyGenome* myGenome2 = (MyGenome*)&pop->individual(j);
 				std::cout << "Match: " << myGenome->GetID() << " vs " << myGenome2->GetID() << "\n";
+				geneSum2 = 0.0f;
 
-				if (myGenome->GetID() > myGenome2->GetID())
+				for (k = 0; k < myGenome2->Get1DArrayAlleleGenome()->length(); ++k)
+				{
+					geneSum2 += myGenome2->Get1DArrayAlleleGenome()->gene(i);
+				}
+
+				if (geneSum > geneSum2)
 				{
 					//myGenome->score(myGenome->score() + 1.0f);
 					myGenome->mTotalMatchesWon++;
 					myGenome->mCurMatchesWon++;
+					//myGenome->score();
 				}
-				else if (myGenome->GetID() < myGenome2->GetID())
+				else if (geneSum < geneSum2)
 				{
 					//myGenome2->score(myGenome2->score() + 1.0f);
 					myGenome2->mTotalMatchesWon++;
@@ -92,7 +114,7 @@ void MyGA::step()
 	}
 
 	// Now evaluate the population
-	pop->evaluate();
+	pop->evaluate(gaTrue);
 
 	/*
 	pop->scale();

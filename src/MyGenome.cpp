@@ -1,5 +1,58 @@
 #include "MyGenome.h"
 
+/// We must also specialize the allele set so that the alleles are handled
+/// properly.  Be sure to handle bounds correctly whether we are discretized
+/// or continuous.  Handle the case where someone sets stupid bounds that
+/// might cause an infinite loop for exclusive bounds.
+#ifndef MYALLELE_H_
+#define MYALLELE_H_
+template <> float
+GAAlleleSet<float>::allele() const
+{
+	float value = 0.0;
+	if (core->type == GAAllele::ENUMERATED)
+	{
+		value = core->a[GARandomInt(0, core->sz - 1)];
+	}
+	else if (core->type == GAAllele::DISCRETIZED)
+	{
+		float n = (core->a[1] - core->a[0]) / core->a[2];
+		int m = (int)n;
+		if (core->lowerb == GAAllele::EXCLUSIVE)
+		{
+			m -= 1;
+		}
+		if (core->upperb == GAAllele::EXCLUSIVE)
+		{
+			m -= 1;
+		}
+		value = core->a[0] + GARandomInt(0, (int)m) * core->a[2];
+		if (core->lowerb == GAAllele::EXCLUSIVE)
+		{
+			value += core->a[2];
+		}
+	}
+	else
+	{
+		if (core->a[0] == core->a[1] &&
+			core->lowerb == GAAllele::EXCLUSIVE &&
+			core->upperb == GAAllele::EXCLUSIVE)
+		{
+			value = core->a[0];
+		}
+		else
+		{
+			do
+			{
+				value = GARandomFloat(core->a[0], core->a[1]);
+			} while ((core->lowerb == GAAllele::EXCLUSIVE && value == core->a[0]) ||
+				(core->upperb == GAAllele::EXCLUSIVE && value == core->a[1]));
+		}
+	}
+	return value;
+}
+#endif
+
 MyGenome::MyGenome()
 	: GAGenome(Init, Mutate, Compare)
 {
@@ -10,7 +63,7 @@ MyGenome::MyGenome()
 	mCurMatchesWon = 0;
 }
 
-MyGenome::MyGenome(int id)
+MyGenome::MyGenome(int id, GARealAlleleSetArray& setArray)
 	: GAGenome(Init, Mutate, Compare)
 {
 	evaluator(Evaluate);
@@ -18,6 +71,7 @@ MyGenome::MyGenome(int id)
 	mID = id;
 	mTotalMatchesWon = 0;
 	mCurMatchesWon = 0;
+	mAlleleSetArray = &setArray;
 }
 
 MyGenome::MyGenome(const MyGenome& orig)
@@ -48,6 +102,8 @@ void MyGenome::copy(const GAGenome& orig)
 	// Copy parts of MyGenome
 	MyGenome* origMyGenome = (MyGenome*)&orig;
 	mID = origMyGenome->GetID();
+	mAlleleSetArray = origMyGenome->GetAlleleSetArray();
+	m1DArrayAlleleGenome = origMyGenome->Get1DArrayAlleleGenome();
 
 	// Copy parts of Ship
 }
@@ -59,6 +115,24 @@ MyGenome::~MyGenome()
 void MyGenome::Init(GAGenome& genome)
 {
 	// TODO: Implement functionality
+
+	MyGenome* myGenome = (MyGenome*)&genome;
+
+	myGenome->m1DArrayAlleleGenome = new GA1DArrayAlleleGenome<float>(*myGenome->mAlleleSetArray, nullptr);
+
+	//child.resize(GAGenome::ANY_SIZE); // let chrom resize if it can
+	myGenome->m1DArrayAlleleGenome->resize(GAGenome::ANY_SIZE);
+	for (int i = myGenome->m1DArrayAlleleGenome->length() - 1; i >= 0; i--)
+	{
+		//child.gene(i, child.alleleset(i).allele());
+		myGenome->m1DArrayAlleleGenome->gene(i, myGenome->m1DArrayAlleleGenome->alleleset(i).allele());
+	}
+
+	std::cout << "Gene:\n";
+	for (int i = 0; i < myGenome->m1DArrayAlleleGenome->length(); ++i)
+	{
+		std::cout << myGenome->m1DArrayAlleleGenome->gene(i) << "\n";
+	}
 }
 
 int MyGenome::Mutate(GAGenome& genome, float probability)
@@ -88,6 +162,8 @@ float MyGenome::Evaluate(GAGenome& genome)
 
 	float score = myGenome->mCurMatchesWon;
 
+	//myGenome->_evaluated = gaTrue;
+
 	return score;
 }
 
@@ -96,6 +172,12 @@ int MyGenome::Cross(const GAGenome& _parent1, const GAGenome& _parent2,
 {
 	// TODO: Fix so that offsprings randomly inherit attributes, etc,
 	// from both parents
+
+
+
+	//std::cout << setArray.set(0) << "\n";
+	//std::cout << setArray.set(0).lower() << "\n";
+	//std::cout << setArray.set(0).upper() << "\n";
 
 	MyGenome& parent1 = (MyGenome&)_parent1;
 	MyGenome& parent2 = (MyGenome&)_parent2;
@@ -124,4 +206,19 @@ int MyGenome::Cross(const GAGenome& _parent1, const GAGenome& _parent2,
 int MyGenome::GetID() const
 {
 	return mID;
+}
+
+GABoolean MyGenome::IsEvaluated() const
+{
+	return _evaluated;
+}
+
+GARealAlleleSetArray* MyGenome::GetAlleleSetArray() const
+{
+	return mAlleleSetArray;
+}
+
+GA1DArrayAlleleGenome<float>* MyGenome::Get1DArrayAlleleGenome() const
+{
+	return m1DArrayAlleleGenome;
 }
