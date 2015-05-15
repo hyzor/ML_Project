@@ -364,9 +364,6 @@ GARealBlendCrossover(const GAGenome& p1, const GAGenome& p2,
 }
 
 
-
-
-
 /// force instantiations of this genome type.
 //
 /// These must be included _after_ the specializations because some compilers

@@ -21,8 +21,10 @@ public:
 	MyGA& operator++() { step(); return *this; }
 	void crossover(CrossoverFunc func);
 
-protected:
 	CrossoverFunc mCrossoverFunc;
+
+protected:
+	//CrossoverFunc mCrossoverFunc;
 };
 
 #endif

@@ -83,6 +83,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>ga_d.lib;SDL2.lib;SDL2main.lib;Box2D_d.lib;SDL2_image.lib;SDL2_ttf.lib;SDL2_gfx_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
+      <AdditionalOptions>/FORCE:MULTIPLE %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /d /y "$(ProjectDir)External\Lib\x86\dll_d\*.*" "$(OutDir)"</Command>

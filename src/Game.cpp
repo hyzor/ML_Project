@@ -1,6 +1,5 @@
 #include "Game.h"
 
-
 Game::Game()
 {
 	mB2VelIterations = 6;
@@ -67,21 +66,37 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	//mPlayerShip->Init(mWorld);
 
 	GARealAlleleSetArray setArray;
-	setArray.add(0.0f, 1.0f);
-	setArray.add(0.0f, 1.0f);
-	setArray.add(0.0f, 10.0f);
-	setArray.add(0.0f, 10.0f);
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
+	/*
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
+	*/
 
 	//float test = setArray.set(0).allele();
 	//std::cout << test << "\n";
 
 	// GA population
 	mGaPop = new GAPopulation();
-	MyGenome* myGenome1 = new MyGenome(10, setArray);
-	MyGenome* myGenome2 = new MyGenome(1, setArray);
+	MyGenome* myGenome1 = new MyGenome(1, setArray, MyGenome::Evaluate);
+	MyGenome* myGenome2 = new MyGenome(2, setArray, MyGenome::Evaluate);
+	MyGenome* myGenome3 = new MyGenome(3, setArray, MyGenome::Evaluate);
 	mGaPop->initialize();
 	mGaPop->add(myGenome1);
 	mGaPop->add(myGenome2);
+	mGaPop->add(myGenome3);
 
 	for (int i = 0; i < mGaPop->size(); ++i)
 	{
@@ -89,16 +104,52 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 		myGenome->initialize();
 	}
 
+	//MyGenome* myGenome3 = new MyGenome(15, setArray);
+	//MyGenome* myGenome4 = new MyGenome(20, setArray);
+	//MyGenome::Cross((GAGenome)*myGenome1, (GAGenome)*myGenome2, (GAGenome*)myGenome3, (GAGenome*)myGenome4);
+	//GA1DArrayGenome<float>::OnePointCrossover((GARealGenome)*myGenome1, (GARealGenome)*myGenome2, myGenome3, myGenome4);
+	//MyGenome::OnePointCrossover((GARealGenome)*myGenome1, (GARealGenome)*myGenome2, myGenome3, myGenome4);
+	//myGenome1->OnePointCrossover((GARealGenome)*myGenome1, (GARealGenome)*myGenome2, myGenome3, myGenome4);
+	//MyGenome::Cross((GARealGenome)*myGenome1, (GARealGenome)*myGenome2, myGenome3, myGenome4);
+
 	// GA
 	mGA = new MyGA(*mGaPop);
-	mGA->crossover(MyGenome::Cross);
-	mGA->nGenerations(100);
-	mGA->pMutation(0.01);
-	mGA->pCrossover(0.95);
+	mGA->crossover(MyGenome::OnePointCrossover);
+	mGA->nGenerations(10);
+	mGA->pMutation(0.0f);
+	mGA->pCrossover(1.0f);
 	mGA->scoreFilename("GA_score.dat");
 	mGA->scoreFrequency(10);
 	mGA->flushFrequency(50);
 	mGA->selectScores(GAStatistics::AllScores);
+
+	//mGA->mCrossoverFunc(*myGenome1, *myGenome2, myGenome3, myGenome4);
+
+	/*
+	float geneSum1, geneSum2;
+	geneSum1 = geneSum2 = 0.0f;
+
+	for (int i = 0; i < myGenome1->length(); ++i)
+	{
+		geneSum1 += myGenome1->gene(i);
+		geneSum2 += myGenome2->gene(i);
+		std::cout << myGenome1->gene(i) << ", " << myGenome2->gene(i) << ", " << myGenome3->gene(i) << "\n";
+	}
+	*/
+
+	std::cout << "Initial genomes:\n";
+	for (int i = 0; i < mGA->populationSize(); ++i)
+	{
+		MyGenome* genome = (MyGenome*)&mGA->population().individual(i);
+		std::cout << genome->GetID() << ": ";
+
+		for (int j = 0; j < genome->length(); ++j)
+		{
+			std::cout << genome->gene(j) << ", ";
+		}
+
+		std::cout << " Score: " << genome->score() << "\n";
+	}
 
 	// Evolve by explicitly calling the GA step function
 	while (!mGA->done())
@@ -106,8 +157,36 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 		mGA->step();
 	}
 
+	std::cout << "\n-----------------------\n\n";
+
+	std::cout << "Genomes: \n";
+	for (int i = 0; i < mGA->populationSize(); ++i)
+	{
+		MyGenome* genome = (MyGenome*)&mGA->population().individual(i);
+		std::cout << genome->GetID() << ": ";
+
+		for (int j = 0; j < genome->length(); ++j)
+		{
+			std::cout << genome->gene(j) << ", ";
+		}
+
+		std::cout << " Score: " << genome->score() << "\n";
+	}
+
+	std::cout << "\n";
+
 	// Dump the results of the GA to the screen.
 	MyGenome* genome = (MyGenome*)&mGA->statistics().bestIndividual();
+
+	float geneSumWinner = 0.0f;
+	for (int i = 0; i < genome->length(); ++i)
+	{
+		geneSumWinner += genome->gene(i);
+		std::cout << genome->gene(i) << "\n";
+	}
+
+	//std::cout << geneSum1 << ", " << geneSum2 << ", " << geneSumWinner << "\n";
+
 	std::cout << "The best individual is genome " << genome->GetID() << "\n";
 	std::cout << "Best of generation data is in file '" << mGA->scoreFilename() << "'\n";
 

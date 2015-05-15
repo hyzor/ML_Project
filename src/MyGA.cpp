@@ -10,18 +10,18 @@ MyGA::MyGA(const GAPopulation& pop)
 
 void MyGA::step()
 {
-	std::cout << "Generation " << generation() << "\n";
+	//std::cout << "Generation " << generation() << "\n";
 	for (int i = 0; i < pop->size(); ++i)
 	{
 		MyGenome* myGenome = (MyGenome*)&pop->individual(i);
 		myGenome->mCurMatchesWon = 0;
+		//myGenome->score(0.0f);
 	}
 
-	/*
-	int i;
+	//int i;
 	GAGenome* parent1;
 	GAGenome* parent2;
-	for (i = 0; i < tmpPop->size(); ++i)
+	for (int i = 0; i < tmpPop->size(); ++i)
 	{
 		// Select two parents
 		parent1 = &(pop->select());
@@ -53,11 +53,10 @@ void MyGA::step()
 
 	// Add all the individuals in the temp population to the
 	// actual population
-	for (i = 0; i < tmpPop->size(); ++i)
+	for (int i = 0; i < tmpPop->size(); ++i)
 	{
 		pop->add(tmpPop->individual(i));
 	}
-	*/
 
 	// Get info about the current population (for next time)
 	// and scale the population
@@ -71,9 +70,9 @@ void MyGA::step()
 		int k;
 		float geneSum = 0.0f;
 		float geneSum2 = 0.0f;
-		for (k = 0; k < myGenome->Get1DArrayAlleleGenome()->length(); ++k)
+		for (k = 0; k < myGenome->length(); ++k)
 		{
-			geneSum += myGenome->Get1DArrayAlleleGenome()->gene(i);
+			geneSum += myGenome->gene(k);
 		}
 
 		/*
@@ -88,12 +87,12 @@ void MyGA::step()
 			if (i != j)
 			{
 				MyGenome* myGenome2 = (MyGenome*)&pop->individual(j);
-				std::cout << "Match: " << myGenome->GetID() << " vs " << myGenome2->GetID() << "\n";
-				geneSum2 = 0.0f;
+				//std::cout << "Match: " << myGenome->GetID() << " vs " << myGenome2->GetID() << "\n";
+				float geneSum2 = 0.0f;
 
-				for (k = 0; k < myGenome2->Get1DArrayAlleleGenome()->length(); ++k)
+				for (k = 0; k < myGenome2->length(); ++k)
 				{
-					geneSum2 += myGenome2->Get1DArrayAlleleGenome()->gene(i);
+					geneSum2 += myGenome2->gene(k);
 				}
 
 				if (geneSum > geneSum2)
@@ -116,14 +115,12 @@ void MyGA::step()
 	// Now evaluate the population
 	pop->evaluate(gaTrue);
 
-	/*
 	pop->scale();
 
-	for (i = 0; i < tmpPop->size(); ++i)
+	for (int i = 0; i < tmpPop->size(); ++i)
 	{
-		pop->destroy(GAPopulation::WORST, GAPopulation::RAW);
+		//pop->destroy(GAPopulation::WORST, GAPopulation::RAW);
 	}
-	*/
 
 	// Finally we update the stats by one generation
 	stats.update(*pop);

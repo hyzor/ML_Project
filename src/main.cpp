@@ -11,6 +11,8 @@ of a continuous function in two variables.  This program uses a binary-to-
 decimal genome.
 */
 
+#define INSTANTIATE_REAL_GENOME true
+
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
@@ -20,7 +22,6 @@ decimal genome.
 #include <ctime>
 #include <stdlib.h>
 
-#include <ga/ga.h>
 #include <SDL/SDL.h>
 #include <SDL_ttf/SDL_ttf.h>
 #include <Box2D/Box2D.h>
@@ -72,6 +73,10 @@ static const std::string dir_textures = dir_assets;
 
 int main(int argc, char **argv)
 {
+	srand(time(NULL));
+
+	GARandomSeed();
+
 	bool gameIsRunning = false;
 
 	// SDL
@@ -150,12 +155,6 @@ int main(int argc, char **argv)
 	gameIsRunning = true;
 
 	vec2 curMouseClickPos;
-
-	srand(time(NULL));
-
-	int randVal = rand() % 1000;
-
-	GARandomSeed(randVal);
 
 	while (gameIsRunning)
 	{
