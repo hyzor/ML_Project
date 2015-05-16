@@ -58,9 +58,14 @@ void World::Update(float dt)
 	{
 		if (!mEntities[i]->IsAlive())
 		{
-			mb2World->DestroyBody(mEntities[i]->Getb2Body());
-			std::swap(mEntities[i], mEntities.back());
-			mEntities.pop_back();
+   			if (!mb2World->IsLocked())
+			{
+				std::swap(mEntities[i], mEntities.back());
+				mb2World->DestroyBody(mEntities.back()->Getb2Body());
+				delete mEntities.back();
+				mEntities.pop_back();
+			}
+
 			continue;
 		}
 
@@ -72,7 +77,8 @@ void World::Draw(SDL_Renderer* renderer)
 {
 	for (unsigned int i = 0; i < mEntities.size(); ++i)
 	{
-		mEntities[i]->Draw(renderer);
+		if (mEntities[i]->IsAlive())
+			mEntities[i]->Draw(renderer);
 	}
 }
 

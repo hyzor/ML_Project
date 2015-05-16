@@ -43,7 +43,7 @@ Entity::Entity(float x, float y, int width, int height, int health, int damage, 
 	bodyDef.type = b2_dynamicBody;
 	bodyDef.position.Set(x*Box2dHelper::Units, y*Box2dHelper::Units);
 	bodyDef.angle = angle - 4.71238898038f;
-	mb2Body = world->CreateBody(&bodyDef);
+  	mb2Body = world->CreateBody(&bodyDef);
 
 	mb2LocalInitVec = b2Vec2(std::cos(angle), std::sin(angle));
 
@@ -67,6 +67,12 @@ Entity::~Entity()
 	{
 		delete mSdlClipRect;
 		mSdlClipRect = nullptr;
+	}
+
+	if (mSdlCenterPoint)
+	{
+		delete mSdlCenterPoint;
+		mSdlCenterPoint = nullptr;
 	}
 
 	mb2Body = nullptr;

@@ -43,9 +43,9 @@ Game::~Game()
 		mGA = nullptr;
 	}
 
-	mWorld = nullptr;
-	mWorld->Clear();
+	//mWorld->Clear();
 	World::Destroy();
+	mWorld = nullptr;
 	mTextureManager = nullptr;
 	//TextureManager::Destroy();
 }
@@ -116,8 +116,8 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	mGA = new MyGA(*mGaPop);
 	mGA->crossover(MyGenome::OnePointCrossover);
 	mGA->nGenerations(10);
-	mGA->pMutation(0.0f);
-	mGA->pCrossover(1.0f);
+	mGA->pMutation(0.5f);
+	mGA->pCrossover(0.95f);
 	mGA->scoreFilename("GA_score.dat");
 	mGA->scoreFrequency(10);
 	mGA->flushFrequency(50);
@@ -201,6 +201,9 @@ void Game::Update(float dt)
 	mB2World->Step(dt, mB2VelIterations, mB2PosIterations);
 
 	mWorld->Update(dt);
+
+	if (!mPlayerShip->IsAlive())
+		mPlayerShip = nullptr;
 }
 
 void Game::Draw()
@@ -215,64 +218,68 @@ void Game::Draw()
 	mB2World->DrawDebugData();
 
 	// DEBUG
-	if (mDebugText->CreateFromText("Angle (Deg): " + std::to_string(fmod(mPlayerShip->GetAngle(false), 360.0f)), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
+	if (mDebugText->CreateFromText("Angle (Deg): " + std::to_string(fmod(GetPlayerShip()->GetAngle(false), 360.0f)), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
 	{
 		mDebugText->Render(0, 0, mSDL_Renderer);
 	}
 
-	if (mDebugText->CreateFromText("PosX (px): " + std::to_string(mPlayerShip->GetPosition(false).x), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
+	if (mDebugText->CreateFromText("PosX (px): " + std::to_string(GetPlayerShip()->GetPosition(false).x), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
 	{
 		mDebugText->Render(0, 20, mSDL_Renderer);
 	}
 
-	if (mDebugText->CreateFromText("PosY (px): " + std::to_string(mPlayerShip->GetPosition(false).y), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
+	if (mDebugText->CreateFromText("PosY (px): " + std::to_string(GetPlayerShip()->GetPosition(false).y), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
 	{
 		mDebugText->Render(0, 40, mSDL_Renderer);
 	}
 
-	if (mDebugText->CreateFromText("PosX (m): " + std::to_string(mPlayerShip->GetPosition(true).x), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
+	if (mDebugText->CreateFromText("PosX (m): " + std::to_string(GetPlayerShip()->GetPosition(true).x), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
 	{
 		mDebugText->Render(0, 60, mSDL_Renderer);
 	}
 
-	if (mDebugText->CreateFromText("PosY (m): " + std::to_string(mPlayerShip->GetPosition(true).y), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
+	if (mDebugText->CreateFromText("PosY (m): " + std::to_string(GetPlayerShip()->GetPosition(true).y), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
 	{
 		mDebugText->Render(0, 80, mSDL_Renderer);
 	}
 
-	if (mDebugText->CreateFromText("VelX: " + std::to_string(mPlayerShip->GetLinearVelocity().x), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
+	if (mDebugText->CreateFromText("VelX: " + std::to_string(GetPlayerShip()->GetLinearVelocity().x), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
 	{
 		mDebugText->Render(0, 100, mSDL_Renderer);
 	}
 
-	if (mDebugText->CreateFromText("VelY: " + std::to_string(mPlayerShip->GetLinearVelocity().y), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
+	if (mDebugText->CreateFromText("VelY: " + std::to_string(GetPlayerShip()->GetLinearVelocity().y), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
 	{
 		mDebugText->Render(0, 120, mSDL_Renderer);
 	}
 
-	if (mDebugText->CreateFromText("WaypointX (m): " + std::to_string(mPlayerShip->GetCurrentWaypoint().x), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
+	if (mDebugText->CreateFromText("WaypointX (m): " + std::to_string(GetPlayerShip()->GetCurrentWaypoint().x), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
 	{
 		mDebugText->Render(0, 140, mSDL_Renderer);
 	}
 
-	if (mDebugText->CreateFromText("WaypointY (m): " + std::to_string(mPlayerShip->GetCurrentWaypoint().y), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
+	if (mDebugText->CreateFromText("WaypointY (m): " + std::to_string(GetPlayerShip()->GetCurrentWaypoint().y), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
 	{
 		mDebugText->Render(0, 160, mSDL_Renderer);
 	}
 
-	if (mDebugText->CreateFromText("WaypointX (px): " + std::to_string(mPlayerShip->GetCurrentWaypoint().x*Box2dHelper::PixelsPerMeter), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
+	if (mDebugText->CreateFromText("WaypointX (px): " + std::to_string(GetPlayerShip()->GetCurrentWaypoint().x*Box2dHelper::PixelsPerMeter), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
 	{
 		mDebugText->Render(0, 180, mSDL_Renderer);
 	}
 
-	if (mDebugText->CreateFromText("WaypointY (px): " + std::to_string(mPlayerShip->GetCurrentWaypoint().y*Box2dHelper::PixelsPerMeter), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
+	if (mDebugText->CreateFromText("WaypointY (px): " + std::to_string(GetPlayerShip()->GetCurrentWaypoint().y*Box2dHelper::PixelsPerMeter), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
 	{
 		mDebugText->Render(0, 200, mSDL_Renderer);
 	}
 }
 
-Ship* Game::GetPlayerShip() const
+Ship* Game::GetPlayerShip()
 {
+	if (!mPlayerShip)
+		mPlayerShip = mWorld->SpawnEntity<Ship>(mScreenWidth / 2, mScreenHeight / 2, 48,
+		64, 5, 1, 0.0f, mTextureManager->LoadTexture("Ship.png"));
+
 	return mPlayerShip;
 }
 

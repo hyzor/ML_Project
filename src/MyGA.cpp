@@ -11,12 +11,6 @@ MyGA::MyGA(const GAPopulation& pop)
 void MyGA::step()
 {
 	//std::cout << "Generation " << generation() << "\n";
-	for (int i = 0; i < pop->size(); ++i)
-	{
-		MyGenome* myGenome = (MyGenome*)&pop->individual(i);
-		myGenome->mCurMatchesWon = 0;
-		//myGenome->score(0.0f);
-	}
 
 	//int i;
 	GAGenome* parent1;
@@ -58,6 +52,14 @@ void MyGA::step()
 		pop->add(tmpPop->individual(i));
 	}
 
+	for (int i = 0; i < pop->size(); ++i)
+	{
+		MyGenome* myGenome = (MyGenome*)&pop->individual(i);
+		myGenome->Reset();
+		//myGenome->mCurMatchesWon = 0;
+		//myGenome->score(0.0f);
+	}
+
 	// Get info about the current population (for next time)
 	// and scale the population
 	//pop->evaluate();
@@ -70,7 +72,7 @@ void MyGA::step()
 		int k;
 		float geneSum = 0.0f;
 		float geneSum2 = 0.0f;
-		for (k = 0; k < myGenome->length(); ++k)
+		for (int k = 0; k < myGenome->length(); ++k)
 		{
 			geneSum += myGenome->gene(k);
 		}
@@ -90,7 +92,7 @@ void MyGA::step()
 				//std::cout << "Match: " << myGenome->GetID() << " vs " << myGenome2->GetID() << "\n";
 				float geneSum2 = 0.0f;
 
-				for (k = 0; k < myGenome2->length(); ++k)
+				for (int k = 0; k < myGenome2->length(); ++k)
 				{
 					geneSum2 += myGenome2->gene(k);
 				}

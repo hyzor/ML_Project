@@ -174,40 +174,31 @@ int main(int argc, char **argv)
 				switch (sdlEvent.key.keysym.sym)
 				{
 				case SDLK_w:
-					std::cout << "Key event: 'w' pressed\n";
 					game->GetPlayerShip()->ActivateEventTrigger(Ship::THRUST_FORWARD, true);
 					break;
 				case SDLK_s:
-					std::cout << "Key event: 's' pressed\n";
 					game->GetPlayerShip()->ActivateEventTrigger(Ship::THRUST_BACKWARD, true);
 					break;
 				case SDLK_a:
-					std::cout << "Key event: 'a' pressed\n";
 					game->GetPlayerShip()->ActivateEventTrigger(Ship::TORQUE_LEFT, true);
 					break;
 				case SDLK_d:
-					std::cout << "Key event: 'd' pressed\n";
 					game->GetPlayerShip()->ActivateEventTrigger(Ship::TORQUE_RIGHT, true);
 					break;
 				case SDLK_r:
-					std::cout << "Key event: 'r' pressed\n";
 					if (game->GetPlayerShip())
 						game->GetPlayerShip()->Reset();
 					break;
 				case SDLK_e:
-					std::cout << "Key event: 'e' pressed\n";
 					game->GetPlayerShip()->ActivateEventTrigger(Ship::STRAFE_RIGHT, true);
 					break;
 				case SDLK_q:
-					std::cout << "Key event: 'q' pressed\n";
 					game->GetPlayerShip()->ActivateEventTrigger(Ship::STRAFE_LEFT, true);
 					break;
 				case SDLK_SPACE:
-					std::cout << "Key event: 'space' pressed\n";
 					game->GetPlayerShip()->ActivateEventTrigger(Ship::SHOOT, true);
 					break;
 				case SDLK_LSHIFT:
-					std::cout << "Key event: 'lshift' pressed\n";
 					game->GetPlayerShip()->ActivateEventTrigger(Ship::STABILIZE, true);
 					break;
 				case SDLK_ESCAPE:
@@ -220,35 +211,27 @@ int main(int argc, char **argv)
 				switch (sdlEvent.key.keysym.sym)
 				{
 					case SDLK_w:
-						std::cout << "Key event: 'w' released\n";
 						game->GetPlayerShip()->ActivateEventTrigger(Ship::THRUST_FORWARD, false);
 						break;
 					case SDLK_s:
-						std::cout << "Key event: 's' released\n";
 						game->GetPlayerShip()->ActivateEventTrigger(Ship::THRUST_BACKWARD, false);
 						break;
 					case SDLK_a:
-						std::cout << "Key event: 'a' released\n";
 						game->GetPlayerShip()->ActivateEventTrigger(Ship::TORQUE_LEFT, false);
 						break;
 					case SDLK_d:
-						std::cout << "Key event: 'd' released\n";
 						game->GetPlayerShip()->ActivateEventTrigger(Ship::TORQUE_RIGHT, false);
 						break;
 					case SDLK_e:
-						std::cout << "Key event: 'e' released\n";
 						game->GetPlayerShip()->ActivateEventTrigger(Ship::STRAFE_RIGHT, false);
 						break;
 					case SDLK_q:
-						std::cout << "Key event: 'q' released\n";
 						game->GetPlayerShip()->ActivateEventTrigger(Ship::STRAFE_LEFT, false);
 						break;
 					case SDLK_SPACE:
-						std::cout << "Key event: 'space' released\n";
 						game->GetPlayerShip()->ActivateEventTrigger(Ship::SHOOT, false);
 						break;
 					case SDLK_LSHIFT:
-						std::cout << "Key event: 'lshift' released\n";
 						game->GetPlayerShip()->ActivateEventTrigger(Ship::STABILIZE, false);
 						break;
 				}
@@ -265,6 +248,12 @@ int main(int argc, char **argv)
 		SDL_RenderPresent(renderer);
 	}
 
+	if (game)
+	{
+		delete game;
+		game = nullptr;
+	}
+
 	if (debugDraw)
 	{
 		delete debugDraw;
@@ -276,7 +265,9 @@ int main(int argc, char **argv)
 		delete contactListener;
 		contactListener = nullptr;
 	}
+
 	TextureManager::Destroy();
+	textureManager = nullptr;
 
 	TTF_CloseFont(font);
 	font = nullptr;

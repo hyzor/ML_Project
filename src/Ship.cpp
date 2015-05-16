@@ -100,7 +100,9 @@ void Ship::InitShip()
 }
 
 Ship::~Ship()
-{}
+{
+
+}
 
 void Ship::ActivateEventTrigger(Events movement, bool activate)
 {

@@ -86,6 +86,8 @@ public:
 	//GARealAlleleSetArray* GetAlleleSetArray() const;
 
 	//GA1DArrayAlleleGenome<float>* Get1DArrayAlleleGenome() const;
+
+	void Reset();
 	
 public:
 	// Custom data for MyGenome

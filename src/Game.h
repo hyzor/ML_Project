@@ -30,7 +30,7 @@ public:
 	void Update(float dt);
 	void Draw();
 
-	Ship* GetPlayerShip() const;
+	Ship* GetPlayerShip();
 	World* GetWorld() const;
 
 private:

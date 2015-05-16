@@ -125,7 +125,7 @@ float MyGenome::Evaluate(GAGenome& genome)
 
 	float score = myGenome->mCurMatchesWon;
 
-	//myGenome->_evaluated = gaTrue;
+	myGenome->_evaluated = gaTrue;
 
 	return score;
 }
@@ -189,6 +189,12 @@ int MyGenome::GetID() const
 GABoolean MyGenome::IsEvaluated() const
 {
 	return _evaluated;
+}
+
+void MyGenome::Reset()
+{
+	_evaluated = gaFalse;
+	mCurMatchesWon = 0;
 }
 
 /*
