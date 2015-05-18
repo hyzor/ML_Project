@@ -6,97 +6,108 @@ Ship::Ship()
 	InitShip();
 }
 
-Ship::Ship(float x, float y, int width, int height, int health, int damage, float angle, SDL_Wrapper::Texture* texture, b2World* world)
-	: Entity(x, y, width, height, health, damage, angle, texture, world)
+Ship::Ship(float x, float y, int width, int height, int health, int damage, float angle, bool isImmovable, SDL_Wrapper::Texture* texture, b2World* world)
+	: Entity(x, y, width, height, health, damage, angle, isImmovable, texture, world)
 {
 	InitShip();
 }
 
 void Ship::Update(float dt)
 {
-	if (GetPosition(true).y < 0.0f || GetPosition(true).y > (600.0f * Box2dHelper::Units)
-		|| GetPosition(true).x < 0.0f || GetPosition(true).x > (800.0f * Box2dHelper::Units))
-	{
-		if (mWaypoints.size() > 0)
+		if (GetPosition(true).y < 0.0f || GetPosition(true).y >(600.0f * Box2dHelper::Units)
+			|| GetPosition(true).x < 0.0f || GetPosition(true).x >(800.0f * Box2dHelper::Units))
 		{
-			if (mWaypoints.front().isIntermediate)
-				mWaypoints.pop_front();
+			if (mWaypoints.size() > 0)
+			{
+				if (mWaypoints.front().isIntermediate)
+					mWaypoints.pop_front();
+			}
 		}
-	}
 
-	Entity::Update(dt);
+		Entity::Update(dt);
 
-	ProcessWaypoints(dt);
+		if (mCurCooldown > 0.0f)
+			mCurCooldown -= dt;
 
-	if (mCurCooldown > 0.0f)
-		mCurCooldown -= dt;
+		if (mType == Type::STATIONARY)
+		{
+			RotateTo_Torque(mTarget, dt);
+			Shoot();
+		}
+		else
+		{
+			ProcessWaypoints(dt);
 
-	//b2Vec2 forceDirection = mb2Body->GetWorldVector(mb2LocalInitVec);
-	//forceDirection *= mMagnitude;
+			//b2Vec2 forceDirection = mb2Body->GetWorldVector(mb2LocalInitVec);
+			//forceDirection *= mMagnitude;
 
-	float dirX = std::cos((GetAngle_NonRetarded(true)));
-	float dirY = std::sin((GetAngle_NonRetarded(true)));
+			float dirX = std::cos((GetAngle_NonRetarded(true)));
+			float dirY = std::sin((GetAngle_NonRetarded(true)));
 
-	b2Vec2 forceDirection = b2Vec2(dirX, dirY);
-	forceDirection *= mMagnitude;
-	
-	if (mEventTriggers[Events::THRUST_FORWARD])
-	{
-		mb2Body->ApplyForce(-forceDirection, mb2Body->GetWorldCenter(), true);
-	}
+			b2Vec2 forceDirection = b2Vec2(dirX, dirY);
+			forceDirection *= mMagnitude;
 
-	if (mEventTriggers[Events::THRUST_BACKWARD])
-	{
-		mb2Body->ApplyForce(forceDirection, mb2Body->GetWorldCenter(), true);
-	}
+			if (mEventTriggers[Events::THRUST_FORWARD])
+			{
+				mb2Body->ApplyForce(-forceDirection, mb2Body->GetWorldCenter(), true);
+			}
 
-	if (mEventTriggers[Events::TORQUE_LEFT])
-	{
-		mb2Body->ApplyTorque(-mTorque, true);
-	}
+			if (mEventTriggers[Events::THRUST_BACKWARD])
+			{
+				mb2Body->ApplyForce(forceDirection, mb2Body->GetWorldCenter(), true);
+			}
 
-	if (mEventTriggers[Events::TORQUE_RIGHT])
-	{
-		mb2Body->ApplyTorque(mTorque, true);
-	}
+			if (mEventTriggers[Events::TORQUE_LEFT])
+			{
+				mb2Body->ApplyTorque(-mTorque, true);
+			}
 
-	if (mEventTriggers[Events::STRAFE_LEFT])
-	{
-		float dirX = std::cos((GetAngle_NonRetarded(true) + MathHelper::DegreesToRadians(90.0f)));
-		float dirY = std::sin((GetAngle_NonRetarded(true) + MathHelper::DegreesToRadians(90.0f)));
+			if (mEventTriggers[Events::TORQUE_RIGHT])
+			{
+				mb2Body->ApplyTorque(mTorque, true);
+			}
 
-		b2Vec2 force = b2Vec2(dirX*mMagnitude, dirY*mMagnitude);
-		mb2Body->ApplyForce(force, mb2Body->GetWorldCenter(), true);
-	}
+			if (mEventTriggers[Events::STRAFE_LEFT])
+			{
+				float dirX = std::cos((GetAngle_NonRetarded(true) + MathHelper::DegreesToRadians(90.0f)));
+				float dirY = std::sin((GetAngle_NonRetarded(true) + MathHelper::DegreesToRadians(90.0f)));
 
-	if (mEventTriggers[Events::STRAFE_RIGHT])
-	{
-		float dirX = std::cos((GetAngle_NonRetarded(true) - MathHelper::DegreesToRadians(90.0f)));
-		float dirY = std::sin((GetAngle_NonRetarded(true) - MathHelper::DegreesToRadians(90.0f)));
+				b2Vec2 force = b2Vec2(dirX*mMagnitude, dirY*mMagnitude);
+				mb2Body->ApplyForce(force, mb2Body->GetWorldCenter(), true);
+			}
 
-		b2Vec2 force = b2Vec2(dirX*mMagnitude, dirY*mMagnitude);
-		mb2Body->ApplyForce(force, mb2Body->GetWorldCenter(), true);
-	}
+			if (mEventTriggers[Events::STRAFE_RIGHT])
+			{
+				float dirX = std::cos((GetAngle_NonRetarded(true) - MathHelper::DegreesToRadians(90.0f)));
+				float dirY = std::sin((GetAngle_NonRetarded(true) - MathHelper::DegreesToRadians(90.0f)));
 
-	if (mEventTriggers[Events::STABILIZE])
-	{
-		mb2Body->SetLinearDamping(5.0f);
-		mb2Body->SetAngularDamping(5.0f);
-	}
+				b2Vec2 force = b2Vec2(dirX*mMagnitude, dirY*mMagnitude);
+				mb2Body->ApplyForce(force, mb2Body->GetWorldCenter(), true);
+			}
 
-	if (mEventTriggers[Events::SHOOT])
-	{
-		// Try to shoot
-		Shoot();
-	}
+			if (mEventTriggers[Events::STABILIZE])
+			{
+				mb2Body->SetLinearDamping(5.0f);
+				mb2Body->SetAngularDamping(5.0f);
+			}
+
+			if (mEventTriggers[Events::SHOOT])
+			{
+				// Try to shoot
+				Shoot();
+			}
+		}
+
+
 }
 
 void Ship::InitShip()
 {
 	mTorque = 30.0f;
 	mMagnitude = 20.0f;
-	mCooldown = 0.15f;
+	mCooldown = 1.0f;
 	mCurCooldown = 0.0f;
+	mType = Type::NON_STATIONARY;
 }
 
 Ship::~Ship()
@@ -236,7 +247,7 @@ bool Ship::Shoot()
 		Projectile* newProjectile = World::GetInstance()->SpawnEntity<Projectile>(
 			GetPosition(false).x - (GetDimensions(false).y*0.50f)*std::cos(GetAngle_NonRetarded(true)) - ((float)height*0.7f)*std::cos(GetAngle_NonRetarded(true)),
 			GetPosition(false).y - (GetDimensions(false).y*0.50f)*std::sin(GetAngle_NonRetarded(true)) - ((float)height*0.7f)*std::sin(GetAngle_NonRetarded(true)),
-			width, height, 1, 1, GetAngle(true), TextureManager::GetInstance()->LoadTexture("Projectile.png"));
+			width, height, 1, 1, GetAngle(true), false, TextureManager::GetInstance()->LoadTexture("Projectile.png"));
 		newProjectile->Init(2.0f);
 		mCurCooldown = mCooldown;
 
@@ -455,4 +466,20 @@ void Ship::AddMovementPattern(int movementPattern, bool immediate)
 		break;
 	}
 	}
+}
+
+void Ship::SetTarget(b2Vec2 target)
+{
+	mTarget = target;
+}
+
+b2Vec2 Ship::GetTarget() const
+{
+	return mTarget;
+}
+
+void Ship::Init(int type)
+{
+	//mIsImmovable = isImmovable;
+	mType = type;
 }

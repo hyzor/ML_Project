@@ -36,6 +36,12 @@ public:
 		NUM_EVENTS
 	};
 
+	static enum Type
+	{
+		NON_STATIONARY,
+		STATIONARY
+	};
+
 	struct Waypoint
 	{
 		b2Vec2 position;
@@ -56,7 +62,7 @@ public:
 
 public:
 	Ship();
-	Ship(float x, float y, int width, int height, int health, int damage, float angle, SDL_Wrapper::Texture* texture, b2World* world);
+	Ship(float x, float y, int width, int height, int health, int damage, float angle, bool isImmovable, SDL_Wrapper::Texture* texture, b2World* world);
 	~Ship();
 
 	void ActivateEventTrigger(Events event, bool activate);
@@ -74,7 +80,12 @@ public:
 
 	void AddMovementPattern(int movementPattern, bool immediate);
 
-private:
+	void SetTarget(b2Vec2 target);
+	b2Vec2 GetTarget() const;
+
+	void Init(int type);
+
+protected:
 	float mTorque;
 	float mMagnitude;
 
@@ -97,6 +108,9 @@ private:
 	std::deque<Waypoint> mWaypoints;
 
 	bool mReachedCurWaypoint;
+
+	b2Vec2 mTarget;
+	int mType;
 };
 
 #endif

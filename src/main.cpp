@@ -151,7 +151,7 @@ int main(int argc, char **argv)
 	box2Dworld->SetContactListener(contactListener);
 
 	Game* game = new Game(window, renderer, WINDOW_WIDTH, WINDOW_HEIGHT, box2Dworld, textureManager, font);
-	game->Init(dir_assets, dir_fonts, dir_textures);
+	game->Init(dir_assets, dir_fonts, dir_textures, dt);
 	gameIsRunning = true;
 
 	vec2 curMouseClickPos;
@@ -242,10 +242,10 @@ int main(int argc, char **argv)
 		game->Update(dt);
 
 		// Draw game
-		game->Draw();
+		//game->Draw();
 
 		// Present final canvas
-		SDL_RenderPresent(renderer);
+		//SDL_RenderPresent(renderer);
 	}
 
 	if (game)

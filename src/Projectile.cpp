@@ -7,7 +7,7 @@ Projectile::Projectile()
 }
 
 
-Projectile::Projectile(float x, float y, int width, int height, int health, int damage, float initAngle, SDL_Wrapper::Texture* texture, b2World* world)
+Projectile::Projectile(float x, float y, int width, int height, int health, int damage, float initAngle, bool isImmovable, SDL_Wrapper::Texture* texture, b2World* world)
 	: Entity(x, y, width, height, health, damage, initAngle, texture, world)
 {
 	mInitAngle = initAngle;

@@ -69,7 +69,9 @@ public:
 	static int Cross(const GAGenome&, const GAGenome&, GAGenome*, GAGenome*);
 
 public:
-	MyGenome(int id, GARealAlleleSetArray& setArray, GAGenome::Evaluator f = (GAGenome::Evaluator)0);
+	MyGenome(int id, GARealAlleleSetArray& setArray, float posX, float posY,
+		int width, int height, int health, int damage, float angle,
+		SDL_Wrapper::Texture* texture, b2World* world, GAGenome::Evaluator f = (GAGenome::Evaluator)0);
 	//MyGenome(int id, GARealAlleleSetArray& setArray);
 	//MyGenome(const MyGenome& orig);
 	//MyGenome& operator=(const GAGenome& arr);
@@ -79,6 +81,9 @@ public:
 
 	virtual GAGenome* clone(CloneMethod) const;
 	virtual void copy(const GAGenome& orig);
+
+	void SetScore(float score);
+	float GetScore() const;
 
 	// Custom functions for MyGenome
 	int GetID() const;
@@ -93,6 +98,7 @@ public:
 	// Custom data for MyGenome
 	int mTotalMatchesWon;
 	int mCurMatchesWon;
+	float mScore;
 
 protected:
 	int mID;

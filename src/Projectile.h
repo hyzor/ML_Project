@@ -9,7 +9,7 @@ class Projectile : public Entity
 {
 public:
 	Projectile();
-	Projectile(float x, float y, int width, int height, int health, int damage, float initAngle, SDL_Wrapper::Texture* texture, b2World* world);
+	Projectile(float x, float y, int width, int height, int health, int damage, float initAngle, bool isImmovable, SDL_Wrapper::Texture* texture, b2World* world);
 	~Projectile();
 
 	void Init(float lifetime);

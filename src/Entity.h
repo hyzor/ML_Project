@@ -12,6 +12,7 @@ class Entity
 {
 public:
 	Entity();
+	Entity(float x, float y, int width, int height, int health, int damage, float angle, bool isImmovable, SDL_Wrapper::Texture* texture, b2World* world);
 	Entity(float x, float y, int width, int height, int health, int damage, float angle, SDL_Wrapper::Texture* texture, b2World* world);
 	virtual ~Entity();
 
@@ -22,6 +23,8 @@ public:
 	float GetAngle_NonRetarded(bool inRadians) const;
 	b2Vec2 GetLinearVelocity() const;
 	float GetAngularVelocity() const;
+
+	int GetHealth() const;
 
 	void SetPosition(b2Vec2 pos);
 
@@ -49,7 +52,10 @@ protected:
 	int mHealth;
 	int mDamage;
 
+	int mInitialHealth;
+
 	bool mIsAlive;
+	bool mIsImmovable;
 };
 
 #endif

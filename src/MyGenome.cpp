@@ -2,7 +2,8 @@
 
 #include <ga/GARealGenome.C>
 
-MyGenome::MyGenome(int id, GARealAlleleSetArray& setArray, GAGenome::Evaluator f)
+/*
+MyGenome::MyGenome(int id, GARealAlleleSetArray& setArray, float posX, float posY, GAGenome::Evaluator f)
 	//: GAGenome(Init, Mutate, Compare)
 	: GARealGenome(setArray, f)
 {
@@ -12,6 +13,14 @@ MyGenome::MyGenome(int id, GARealAlleleSetArray& setArray, GAGenome::Evaluator f
 	mID = id;
 	mTotalMatchesWon = 0;
 	mCurMatchesWon = 0;
+}
+*/
+
+MyGenome::MyGenome(int id, GARealAlleleSetArray& setArray, float posX, float posY, 
+	int width, int height, int health, int damage, float angle,
+	SDL_Wrapper::Texture* texture, b2World* world, GAGenome::Evaluator f /*= (GAGenome::Evaluator)0*/)
+	: Ship(posX, posY, width, height, health, damage, angle, false, texture, world), GARealGenome(setArray, f)
+{
 }
 
 /*
@@ -64,6 +73,18 @@ void MyGenome::copy(const GAGenome& orig)
 	//m1DArrayAlleleGenome = new GA1DArrayAlleleGenome<float>(*origMyGenome->Get1DArrayAlleleGenome());
 
 	// Copy parts of Ship
+	mWaypoints.clear();
+	mWaypoints = origMyGenome->mWaypoints;
+}
+
+void MyGenome::SetScore(float score)
+{
+	mScore = score;
+}
+
+float MyGenome::GetScore() const
+{
+	return mScore;
 }
 
 MyGenome::~MyGenome()
@@ -76,26 +97,12 @@ void MyGenome::Init(GAGenome& genome)
 
 	MyGenome* myGenome = (MyGenome*)&genome;
 
-	//myGenome->m1DArrayAlleleGenome = new GA1DArrayAlleleGenome<float>(*myGenome->mAlleleSetArray, nullptr);
+	myGenome->mWaypoints.clear();
 
-	//GA1DArrayAlleleGenome<float>::UniformInitializer(genome);
-	//UniformInitializer(genome);
-
-	//child.resize(GAGenome::ANY_SIZE); // let chrom resize if it can
-	/*
-	myGenome->m1DArrayAlleleGenome->resize(GAGenome::ANY_SIZE);
-	for (int i = myGenome->m1DArrayAlleleGenome->length() - 1; i >= 0; i--)
+	for (int i = 0; i < myGenome->length(); i += 2)
 	{
-		//child.gene(i, child.alleleset(i).allele());
-		myGenome->m1DArrayAlleleGenome->gene(i, myGenome->m1DArrayAlleleGenome->alleleset(i).allele());
+		myGenome->AddWaypoint(b2Vec2(myGenome->gene(i)*Box2dHelper::Units, myGenome->gene(i+1)*Box2dHelper::Units));
 	}
-
-	std::cout << "Gene:\n";
-	for (int i = 0; i < myGenome->m1DArrayAlleleGenome->length(); ++i)
-	{
-		std::cout << myGenome->m1DArrayAlleleGenome->gene(i) << "\n";
-	}
-	*/
 }
 
 int MyGenome::Mutate(GAGenome& genome, float probability)
@@ -123,11 +130,9 @@ float MyGenome::Evaluate(GAGenome& genome)
 
 	MyGenome* myGenome = (MyGenome*)&genome;
 
-	float score = myGenome->mCurMatchesWon;
-
 	myGenome->_evaluated = gaTrue;
 
-	return score;
+	return myGenome->GetScore();
 }
 
 int MyGenome::Cross(const GAGenome& _parent1, const GAGenome& _parent2,
@@ -196,15 +201,3 @@ void MyGenome::Reset()
 	_evaluated = gaFalse;
 	mCurMatchesWon = 0;
 }
-
-/*
-GARealAlleleSetArray* MyGenome::GetAlleleSetArray() const
-{
-	return mAlleleSetArray;
-}
-
-GA1DArrayAlleleGenome<float>* MyGenome::Get1DArrayAlleleGenome() const
-{
-	return m1DArrayAlleleGenome;
-}
-*/

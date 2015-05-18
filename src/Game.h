@@ -8,7 +8,6 @@
 #include <SDL_ttf/SDL_ttf.h>
 #include <Box2D/Box2D.h>
 
-#include "MyGA.h"
 #include "Ship.h"
 #include "SDL_Wrapper.h"
 #include "World.h"
@@ -16,6 +15,9 @@
 #include "MyB2DebugDraw.h"
 #include "MyB2ContactListener.h"
 #include "MyGenome.h"
+#include "Common.h"
+
+class MyGA;
 
 class Game
 {
@@ -25,13 +27,15 @@ public:
 		b2World* _b2World, TextureManager* textureManager, TTF_Font* mainFont);
 	~Game();
 
-	bool Init(std::string assetsDir, std::string fontsDir, std::string texturesDir);
+	bool Init(std::string assetsDir, std::string fontsDir, std::string texturesDir, float dt);
 
 	void Update(float dt);
 	void Draw();
 
 	Ship* GetPlayerShip();
 	World* GetWorld() const;
+
+	void Reset();
 
 private:
 	SDL_Window* mSDL_Window;

@@ -47,6 +47,23 @@ void World::Clear()
 	mEntities.clear();
 }
 
+void World::Flush()
+{
+	for (unsigned int i = 0; i < mEntities.size(); ++i)
+	{
+		if (!mEntities[i]->IsAlive())
+		{
+			if (!mb2World->IsLocked())
+			{
+				std::swap(mEntities[i], mEntities.back());
+				mb2World->DestroyBody(mEntities.back()->Getb2Body());
+				delete mEntities.back();
+				mEntities.pop_back();
+			}
+		}
+	}
+}
+
 b2World* World::Getb2World() const
 {
 	return mb2World;
@@ -56,6 +73,7 @@ void World::Update(float dt)
 {
 	for (unsigned int i = 0; i < mEntities.size(); ++i)
 	{
+		/*
 		if (!mEntities[i]->IsAlive())
 		{
    			if (!mb2World->IsLocked())
@@ -68,6 +86,7 @@ void World::Update(float dt)
 
 			continue;
 		}
+		*/
 
 		mEntities[i]->Update(dt);
 	}

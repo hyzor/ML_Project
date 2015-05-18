@@ -4,6 +4,7 @@
 Entity::Entity()
 {
 	mHealth = 1;
+	mInitialHealth = 1;
 	mSpawnPosX = 0.0f;
 	mSpawnPosY = 0.0f;
 	mTexture = nullptr;
@@ -15,8 +16,60 @@ Entity::Entity()
 	mIsAlive = true;
 	mSdlCenterPoint = nullptr;
 	mb2LocalInitVec = b2Vec2(0.0f, 0.0f);
+	mIsImmovable = false;
 }
 
+
+Entity::Entity(float x, float y, int width, int height, int health, int damage, float angle, bool isImmovable, SDL_Wrapper::Texture* texture, b2World* world)
+	: Entity()
+{
+	mSpawnPosX = x;
+	mSpawnPosY = y;
+	mHealth = health;
+	mInitialHealth = health;
+	mTexture = texture;
+	mWidth = (float)width;
+	mHeight = (float)height;
+	mDamage = damage;
+
+	mIsImmovable = isImmovable;
+
+	mSdlClipRect = new SDL_Rect();
+	mSdlClipRect->x = 0;
+	mSdlClipRect->y = 0;
+	mSdlClipRect->w = width;
+	mSdlClipRect->h = height;
+
+	mSdlCenterPoint = new SDL_Point();
+	mSdlCenterPoint->x = width / 2;
+	mSdlCenterPoint->y = height / 2;
+
+	b2BodyDef bodyDef;
+
+	if (mIsImmovable)
+		bodyDef.type = b2_kinematicBody;
+	else
+		bodyDef.type = b2_dynamicBody;
+
+	bodyDef.position.Set(x*Box2dHelper::Units, y*Box2dHelper::Units);
+	bodyDef.angle = angle - 4.71238898038f;
+	mb2Body = world->CreateBody(&bodyDef);
+
+	mb2LocalInitVec = b2Vec2(std::cos(angle), std::sin(angle));
+
+	b2PolygonShape dynamicBox;
+	dynamicBox.SetAsBox((mWidth*Box2dHelper::Units)*0.5f, (mHeight*Box2dHelper::Units)*0.5f, b2Vec2(0.0f, 0.0f), 0.0f);
+
+	b2FixtureDef fixtureDef;
+	fixtureDef.shape = &dynamicBox;
+	fixtureDef.density = 1.0f;
+	fixtureDef.friction = 0.0f;
+	fixtureDef.restitution = 0.0f;
+
+	mb2Body->SetUserData(this);
+
+	mb2Body->CreateFixture(&fixtureDef);
+}
 
 Entity::Entity(float x, float y, int width, int height, int health, int damage, float angle, SDL_Wrapper::Texture* texture, b2World* world)
 	: Entity()
@@ -24,6 +77,7 @@ Entity::Entity(float x, float y, int width, int height, int health, int damage, 
 	mSpawnPosX = x;
 	mSpawnPosY = y;
 	mHealth = health;
+	mInitialHealth = health;
 	mTexture = texture;
 	mWidth = (float)width;
 	mHeight = (float)height;
@@ -40,10 +94,15 @@ Entity::Entity(float x, float y, int width, int height, int health, int damage, 
 	mSdlCenterPoint->y = height / 2;
 
 	b2BodyDef bodyDef;
-	bodyDef.type = b2_dynamicBody;
+
+	if (mIsImmovable)
+		bodyDef.type = b2_kinematicBody;
+	else
+		bodyDef.type = b2_dynamicBody;
+
 	bodyDef.position.Set(x*Box2dHelper::Units, y*Box2dHelper::Units);
 	bodyDef.angle = angle - 4.71238898038f;
-  	mb2Body = world->CreateBody(&bodyDef);
+	mb2Body = world->CreateBody(&bodyDef);
 
 	mb2LocalInitVec = b2Vec2(std::cos(angle), std::sin(angle));
 
@@ -117,6 +176,11 @@ float Entity::GetAngularVelocity() const
 	return mb2Body->GetAngularVelocity();
 }
 
+int Entity::GetHealth() const
+{
+	return mHealth;
+}
+
 bool Entity::IsAlive() const
 {
 	return mIsAlive;
@@ -162,6 +226,7 @@ void Entity::Reset()
 	mb2Body->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
 	mb2Body->SetAngularVelocity(0.0f);
 	mIsAlive = true;
+	mHealth = mInitialHealth;
 }
 
 void Entity::DoCollide(int collisionDamage)

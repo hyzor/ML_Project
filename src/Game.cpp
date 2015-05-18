@@ -1,5 +1,7 @@
 #include "Game.h"
 
+#include "MyGA.h"
+
 Game::Game()
 {
 	mB2VelIterations = 6;
@@ -50,7 +52,7 @@ Game::~Game()
 	//TextureManager::Destroy();
 }
 
-bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texturesDir)
+bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texturesDir, float dt)
 {
 	mDebugText = new SDL_Wrapper::Texture();
 
@@ -60,15 +62,24 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 
 	mBackground = mTextureManager->LoadTexture(mAssetsDir + "Background_800x600.png");
 
-	mPlayerShip = mWorld->SpawnEntity<Ship>(mScreenWidth/2, mScreenHeight/2, 48,
-		64, 5, 1, 0.0f, mTextureManager->LoadTexture("Ship.png"));
-	//mPlayerShip->AddMovementPattern(Ship::MOVEMENT_ZIGZAG, true);
-	//mPlayerShip->Init(mWorld);
+	//mPlayerShip = mWorld->SpawnEntity<Ship>(mScreenWidth/2, mScreenHeight/2, 48,
+		//64, 5, 1, 0.0f, false, mTextureManager->LoadTexture("Ship.png"));
+
+	Ship* enemyShip = mWorld->SpawnEntity<Ship>(mScreenWidth, mScreenHeight, 48,
+		64, 5, 1, 0.0f, false, mTextureManager->LoadTexture("Ship.png"));
+	enemyShip->Init(Ship::Type::STATIONARY);
+
+	/*
+	Ship* enemyShip2 = mWorld->SpawnEntity<Ship>(mScreenWidth/2, mScreenHeight/2, 48,
+		64, 5, 1, 0.0f, false, mTextureManager->LoadTexture("Ship.png"));
+	enemyShip2->Init(Ship::Type::NON_STATIONARY);
+
+	enemyShip->SetTarget(enemyShip2->GetPosition(true));
+	*/
 
 	GARealAlleleSetArray setArray;
 	setArray.add(0.0f, mScreenWidth);
 	setArray.add(0.0f, mScreenHeight);
-	/*
 	setArray.add(0.0f, mScreenWidth);
 	setArray.add(0.0f, mScreenHeight);
 	setArray.add(0.0f, mScreenWidth);
@@ -83,34 +94,22 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	setArray.add(0.0f, mScreenHeight);
 	setArray.add(0.0f, mScreenWidth);
 	setArray.add(0.0f, mScreenHeight);
-	*/
-
-	//float test = setArray.set(0).allele();
-	//std::cout << test << "\n";
 
 	// GA population
 	mGaPop = new GAPopulation();
-	MyGenome* myGenome1 = new MyGenome(1, setArray, MyGenome::Evaluate);
-	MyGenome* myGenome2 = new MyGenome(2, setArray, MyGenome::Evaluate);
-	MyGenome* myGenome3 = new MyGenome(3, setArray, MyGenome::Evaluate);
+	//mWorld->AddEntity(enemyShip);
+
 	mGaPop->initialize();
-	mGaPop->add(myGenome1);
-	mGaPop->add(myGenome2);
-	mGaPop->add(myGenome3);
+	MyGenome* myGenome = new MyGenome(1, setArray, 0.0f, 0.0f, 48, 64, 5, 1, 0.0f, mTextureManager->LoadTexture("Ship.png"), mWorld->Getb2World(), MyGenome::Evaluate);
+	mGaPop->add(myGenome);
+	//mWorld->AddEntity(mGaPop->individual())
+	mWorld->AddEntity(myGenome);
 
 	for (int i = 0; i < mGaPop->size(); ++i)
 	{
 		MyGenome* myGenome = (MyGenome*)&mGaPop->individual(i);
 		myGenome->initialize();
 	}
-
-	//MyGenome* myGenome3 = new MyGenome(15, setArray);
-	//MyGenome* myGenome4 = new MyGenome(20, setArray);
-	//MyGenome::Cross((GAGenome)*myGenome1, (GAGenome)*myGenome2, (GAGenome*)myGenome3, (GAGenome*)myGenome4);
-	//GA1DArrayGenome<float>::OnePointCrossover((GARealGenome)*myGenome1, (GARealGenome)*myGenome2, myGenome3, myGenome4);
-	//MyGenome::OnePointCrossover((GARealGenome)*myGenome1, (GARealGenome)*myGenome2, myGenome3, myGenome4);
-	//myGenome1->OnePointCrossover((GARealGenome)*myGenome1, (GARealGenome)*myGenome2, myGenome3, myGenome4);
-	//MyGenome::Cross((GARealGenome)*myGenome1, (GARealGenome)*myGenome2, myGenome3, myGenome4);
 
 	// GA
 	mGA = new MyGA(*mGaPop);
@@ -122,20 +121,7 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	mGA->scoreFrequency(10);
 	mGA->flushFrequency(50);
 	mGA->selectScores(GAStatistics::AllScores);
-
-	//mGA->mCrossoverFunc(*myGenome1, *myGenome2, myGenome3, myGenome4);
-
-	/*
-	float geneSum1, geneSum2;
-	geneSum1 = geneSum2 = 0.0f;
-
-	for (int i = 0; i < myGenome1->length(); ++i)
-	{
-		geneSum1 += myGenome1->gene(i);
-		geneSum2 += myGenome2->gene(i);
-		std::cout << myGenome1->gene(i) << ", " << myGenome2->gene(i) << ", " << myGenome3->gene(i) << "\n";
-	}
-	*/
+	mGA->Init(this, enemyShip);
 
 	std::cout << "Initial genomes:\n";
 	for (int i = 0; i < mGA->populationSize(); ++i)
@@ -154,7 +140,9 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	// Evolve by explicitly calling the GA step function
 	while (!mGA->done())
 	{
-		mGA->step();
+		mGA->step(dt);
+		//Update(dt);
+		//Draw();
 	}
 
 	std::cout << "\n-----------------------\n\n";
@@ -202,8 +190,8 @@ void Game::Update(float dt)
 
 	mWorld->Update(dt);
 
-	if (!mPlayerShip->IsAlive())
-		mPlayerShip = nullptr;
+	//if (!mPlayerShip->IsAlive())
+		//mPlayerShip = nullptr;
 }
 
 void Game::Draw()
@@ -218,6 +206,7 @@ void Game::Draw()
 	mB2World->DrawDebugData();
 
 	// DEBUG
+	/*
 	if (mDebugText->CreateFromText("Angle (Deg): " + std::to_string(fmod(GetPlayerShip()->GetAngle(false), 360.0f)), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
 	{
 		mDebugText->Render(0, 0, mSDL_Renderer);
@@ -272,13 +261,16 @@ void Game::Draw()
 	{
 		mDebugText->Render(0, 200, mSDL_Renderer);
 	}
+	*/
+
+	SDL_RenderPresent(mSDL_Renderer);
 }
 
 Ship* Game::GetPlayerShip()
 {
 	if (!mPlayerShip)
 		mPlayerShip = mWorld->SpawnEntity<Ship>(mScreenWidth / 2, mScreenHeight / 2, 48,
-		64, 5, 1, 0.0f, mTextureManager->LoadTexture("Ship.png"));
+		64, 5, 1, 0.0f, false, mTextureManager->LoadTexture("Ship.png"));
 
 	return mPlayerShip;
 }
@@ -286,4 +278,9 @@ Ship* Game::GetPlayerShip()
 World* Game::GetWorld() const
 {
 	return mWorld;
+}
+
+void Game::Reset()
+{
+
 }
