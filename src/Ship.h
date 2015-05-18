@@ -62,7 +62,7 @@ public:
 
 public:
 	Ship();
-	Ship(float x, float y, int width, int height, int health, int damage, float angle, bool isImmovable, SDL_Wrapper::Texture* texture, b2World* world);
+	Ship(float x, float y, int width, int height, int health, int damage, float angle, bool isImmovable, SDL_Wrapper::Texture* texture);
 	~Ship();
 
 	void ActivateEventTrigger(Events event, bool activate);
@@ -84,6 +84,8 @@ public:
 	b2Vec2 GetTarget() const;
 
 	void Init(int type);
+
+	void ClearWaypoints();
 
 protected:
 	float mTorque;

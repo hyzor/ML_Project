@@ -49,7 +49,10 @@ TextureManager::~TextureManager()
 	for (auto it : mTexturesMap)
 	{
 		if (it.second)
+		{
+			it.second->Free();
 			delete it.second;
+		}
 	}
 
 	mTexturesMap.clear();

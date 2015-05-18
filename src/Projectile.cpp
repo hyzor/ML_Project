@@ -7,11 +7,11 @@ Projectile::Projectile()
 }
 
 
-Projectile::Projectile(float x, float y, int width, int height, int health, int damage, float initAngle, bool isImmovable, SDL_Wrapper::Texture* texture, b2World* world)
-	: Entity(x, y, width, height, health, damage, initAngle, texture, world)
+Projectile::Projectile(float x, float y, int width, int height, int health, int damage, float initAngle, bool isImmovable, SDL_Wrapper::Texture* texture)
+	: Entity(x, y, width, height, health, damage, initAngle, texture)
 {
 	mInitAngle = initAngle;
-	mb2Body->SetBullet(true);
+	//mb2Body->SetBullet(true);
 
 	//mb2Body->SetLinearVelocity(initVel);
 }
@@ -20,7 +20,7 @@ Projectile::~Projectile()
 {
 }
 
-void Projectile::Init(float lifetime)
+void Projectile::Fire(float lifetime)
 {
 	mLifetime = lifetime;
 	mAlivetimer = 0.0f;
@@ -41,7 +41,11 @@ void Projectile::Init(float lifetime)
 
 void Projectile::Update(float dt)
 {
-	Entity::Update(dt);
+	if (mHealth <= 0)
+	{
+		mIsAlive = false;
+	}
+	//Entity::Update(dt);
 
 	if (mAlivetimer >= mLifetime)
 	{

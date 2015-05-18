@@ -68,6 +68,7 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	Ship* enemyShip = mWorld->SpawnEntity<Ship>(mScreenWidth, mScreenHeight, 48,
 		64, 5, 1, 0.0f, false, mTextureManager->LoadTexture("Ship.png"));
 	enemyShip->Init(Ship::Type::STATIONARY);
+	enemyShip->Init_b2(mWorld->Getb2World(), false);
 
 	/*
 	Ship* enemyShip2 = mWorld->SpawnEntity<Ship>(mScreenWidth/2, mScreenHeight/2, 48,
@@ -100,10 +101,10 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	//mWorld->AddEntity(enemyShip);
 
 	mGaPop->initialize();
-	MyGenome* myGenome = new MyGenome(1, setArray, 0.0f, 0.0f, 48, 64, 5, 1, 0.0f, mTextureManager->LoadTexture("Ship.png"), mWorld->Getb2World(), MyGenome::Evaluate);
-	mGaPop->add(myGenome);
+	MyGenome* myGenome1 = new MyGenome(1, setArray, 0.0f, 0.0f, 48, 64, 5, 1, 0.0f, mTextureManager->LoadTexture("Ship.png"), MyGenome::Evaluate);
+	mGaPop->add(myGenome1);
 	//mWorld->AddEntity(mGaPop->individual())
-	mWorld->AddEntity(myGenome);
+	//mWorld->AddEntity(myGenome);
 
 	for (int i = 0; i < mGaPop->size(); ++i)
 	{
@@ -114,8 +115,8 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	// GA
 	mGA = new MyGA(*mGaPop);
 	mGA->crossover(MyGenome::OnePointCrossover);
-	mGA->nGenerations(10);
-	mGA->pMutation(0.5f);
+	mGA->nGenerations(100);
+	mGA->pMutation(0.15f);
 	mGA->pCrossover(0.95f);
 	mGA->scoreFilename("GA_score.dat");
 	mGA->scoreFrequency(10);
@@ -123,10 +124,15 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	mGA->selectScores(GAStatistics::AllScores);
 	mGA->Init(this, enemyShip);
 
+	//delete mGaPop;
+
+	//myGenome1->SetScore(999.0f);
+
 	std::cout << "Initial genomes:\n";
 	for (int i = 0; i < mGA->populationSize(); ++i)
 	{
 		MyGenome* genome = (MyGenome*)&mGA->population().individual(i);
+		((Ship*)genome)->Init_b2(mWorld->Getb2World(), false);
 		std::cout << genome->GetID() << ": ";
 
 		for (int j = 0; j < genome->length(); ++j)

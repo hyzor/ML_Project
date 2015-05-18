@@ -54,7 +54,7 @@ private:
 template <class T>
 T* World::SpawnEntity(float xPos, float yPos, int width, int height, int health, int damage, float angle, bool isImmovable, SDL_Wrapper::Texture* texture)
 {
-	T* newEntity = new T(xPos, yPos, width, height, health, damage, angle, isImmovable, texture, mb2World);
+	T* newEntity = new T(xPos, yPos, width, height, health, damage, angle, isImmovable, texture);
 	mEntities.push_back(newEntity);
 	return newEntity;
 }

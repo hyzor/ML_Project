@@ -71,9 +71,8 @@ public:
 public:
 	MyGenome(int id, GARealAlleleSetArray& setArray, float posX, float posY,
 		int width, int height, int health, int damage, float angle,
-		SDL_Wrapper::Texture* texture, b2World* world, GAGenome::Evaluator f = (GAGenome::Evaluator)0);
+		SDL_Wrapper::Texture* texture, GAGenome::Evaluator f = (GAGenome::Evaluator)0);
 	//MyGenome(int id, GARealAlleleSetArray& setArray);
-	//MyGenome(const MyGenome& orig);
 	//MyGenome& operator=(const GAGenome& arr);
 	virtual ~MyGenome();
 

@@ -6,8 +6,8 @@ Ship::Ship()
 	InitShip();
 }
 
-Ship::Ship(float x, float y, int width, int height, int health, int damage, float angle, bool isImmovable, SDL_Wrapper::Texture* texture, b2World* world)
-	: Entity(x, y, width, height, health, damage, angle, isImmovable, texture, world)
+Ship::Ship(float x, float y, int width, int height, int health, int damage, float angle, bool isImmovable, SDL_Wrapper::Texture* texture)
+	: Entity(x, y, width, height, health, damage, angle, isImmovable, texture)
 {
 	InitShip();
 }
@@ -248,7 +248,8 @@ bool Ship::Shoot()
 			GetPosition(false).x - (GetDimensions(false).y*0.50f)*std::cos(GetAngle_NonRetarded(true)) - ((float)height*0.7f)*std::cos(GetAngle_NonRetarded(true)),
 			GetPosition(false).y - (GetDimensions(false).y*0.50f)*std::sin(GetAngle_NonRetarded(true)) - ((float)height*0.7f)*std::sin(GetAngle_NonRetarded(true)),
 			width, height, 1, 1, GetAngle(true), false, TextureManager::GetInstance()->LoadTexture("Projectile.png"));
-		newProjectile->Init(2.0f);
+		newProjectile->Init_b2(World::GetInstance()->Getb2World(), true);
+		newProjectile->Fire(2.0f);
 		mCurCooldown = mCooldown;
 
 		successful = true;
@@ -482,4 +483,9 @@ void Ship::Init(int type)
 {
 	//mIsImmovable = isImmovable;
 	mType = type;
+}
+
+void Ship::ClearWaypoints()
+{
+	mWaypoints.clear();
 }

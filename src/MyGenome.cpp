@@ -18,9 +18,13 @@ MyGenome::MyGenome(int id, GARealAlleleSetArray& setArray, float posX, float pos
 
 MyGenome::MyGenome(int id, GARealAlleleSetArray& setArray, float posX, float posY, 
 	int width, int height, int health, int damage, float angle,
-	SDL_Wrapper::Texture* texture, b2World* world, GAGenome::Evaluator f /*= (GAGenome::Evaluator)0*/)
-	: Ship(posX, posY, width, height, health, damage, angle, false, texture, world), GARealGenome(setArray, f)
+	SDL_Wrapper::Texture* texture, GAGenome::Evaluator f /*= (GAGenome::Evaluator)0*/)
+	: Ship(posX, posY, width, height, health, damage, angle, false, texture), GARealGenome(setArray, f)
 {
+	mID = id;
+	mTotalMatchesWon = 0;
+	mCurMatchesWon = 0;
+	mScore = 0.0f;
 }
 
 /*
@@ -55,6 +59,12 @@ MyGenome& MyGenome::operator=(const GAGenome& orig)
 
 GAGenome* MyGenome::clone(CloneMethod) const
 {
+	//MyGenome* newGenome = new MyGenome(*this);
+
+	//newGenome->copy(*this);
+
+	//newGenome->mWaypoints = this->mWaypoints;
+
 	return new MyGenome(*this);
 }
 

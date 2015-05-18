@@ -12,8 +12,8 @@ class Entity
 {
 public:
 	Entity();
-	Entity(float x, float y, int width, int height, int health, int damage, float angle, bool isImmovable, SDL_Wrapper::Texture* texture, b2World* world);
-	Entity(float x, float y, int width, int height, int health, int damage, float angle, SDL_Wrapper::Texture* texture, b2World* world);
+	Entity(float x, float y, int width, int height, int health, int damage, float angle, bool isImmovable, SDL_Wrapper::Texture* texture);
+	Entity(float x, float y, int width, int height, int health, int damage, float angle, SDL_Wrapper::Texture* texture);
 	virtual ~Entity();
 
 	b2Body* Getb2Body() const;
@@ -25,6 +25,7 @@ public:
 	float GetAngularVelocity() const;
 
 	int GetHealth() const;
+	int GetHealth_Init() const;
 
 	void SetPosition(b2Vec2 pos);
 
@@ -38,6 +39,11 @@ public:
 
 	void DoCollide(int collisionDamage);
 	int GetCollisionDamage() const;
+
+	bool Init_b2(b2World* world, bool isBullet);
+
+	void SetCollisionEnabled(bool enabled);
+	void Setb2BodyType(b2BodyType bodyType);
 
 protected:
 	SDL_Rect* mSdlClipRect;
@@ -56,6 +62,10 @@ protected:
 
 	bool mIsAlive;
 	bool mIsImmovable;
+
+	float mInitAngle;
+
+	b2Fixture* mb2Fixture;
 };
 
 #endif

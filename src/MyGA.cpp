@@ -30,20 +30,20 @@ void MyGA::step(float dt)
 		// Perform crossover with some probability
 		if (GAFlipCoin(pCrossover()))
 		{
-			//stats.numcro += mCrossoverFunc(*parent1, *parent2, &tmpPop->individual(i), nullptr);
+			stats.numcro += mCrossoverFunc(*parent1, *parent2, &tmpPop->individual(i), nullptr);
 		}
 
 		// If no crossover, copy from parent1 with a probability of
 		// 50% (random bit means 1 or 0)...
 		else if (GARandomBit())
 		{
-			//tmpPop->individual(i).copy(*parent1);
+			tmpPop->individual(i).copy(*parent1);
 		}
 
 		// ...or copy from parent2 if GARandomBit() == 0
 		else
 		{
-			//tmpPop->individual(i).copy(*parent2);
+			tmpPop->individual(i).copy(*parent2);
 		}
 
 		// Perform mutation and keep track of it in stats
@@ -54,7 +54,7 @@ void MyGA::step(float dt)
 	// actual population
 	for (int i = 0; i < tmpPop->size(); ++i)
 	{
-		//pop->add(tmpPop->individual(i));
+		pop->add(tmpPop->individual(i));
 	}
 
 	for (int i = 0; i < pop->size(); ++i)
@@ -62,6 +62,10 @@ void MyGA::step(float dt)
 		MyGenome* myGenome = (MyGenome*)&pop->individual(i);
 		myGenome->Reset();
 		MyGenome::Init(*myGenome);
+		myGenome->Init_b2(mGame->GetWorld()->Getb2World(), false);
+		myGenome->SetCollisionEnabled(false);
+		((Ship*)myGenome)->Reset();
+		myGenome->Setb2BodyType(b2_staticBody);
 		//myGenome->mCurMatchesWon = 0;
 		//myGenome->score(0.0f);
 	}
@@ -71,7 +75,9 @@ void MyGA::step(float dt)
 	// Our objective function, "population based"
 	for (int i = 0; i < pop->size(); ++i)
 	{
-		MyGenome* myGenome = &(MyGenome&)pop->individual(i);
+		MyGenome* myGenome = (MyGenome*)&pop->individual(i);
+		myGenome->Setb2BodyType(b2_dynamicBody);
+		myGenome->SetCollisionEnabled(true);
 		mGame->GetWorld()->AddEntity((Ship*)myGenome);
 
 		bool gameIsRunning = true;
@@ -119,19 +125,21 @@ void MyGA::step(float dt)
 			mGame->Draw();
 			//mEnemyShip->RotateTo_Torque(myGenome->GetPosition(true), dt);
 
-			//mGame->GetWorld()->Flush();
+			mGame->GetWorld()->Flush();
 
 			iterations++;
 		}
 
-		std::cout << "Finished generation " << generation() << " game " << i << "\n";
+		float score = myGenome->GetHealth_Init() + (myGenome->GetHealth() - mEnemyShip->GetHealth());
 
-		float score = myGenome->GetHealth() - mEnemyShip->GetHealth();
+		std::cout << "Finished generation " << generation() << " game " << i << " (Score: " << score << ")\n";
 
 		myGenome->SetScore(score);
 
+		myGenome->SetCollisionEnabled(false);
 		((Ship*)myGenome)->Reset();
 		mEnemyShip->Reset();
+		myGenome->Setb2BodyType(b2_staticBody);
 
 		mGame->GetWorld()->Flush();
 

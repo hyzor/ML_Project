@@ -17,10 +17,12 @@ Entity::Entity()
 	mSdlCenterPoint = nullptr;
 	mb2LocalInitVec = b2Vec2(0.0f, 0.0f);
 	mIsImmovable = false;
+	mInitAngle = 0.0f;
+	mb2Fixture = nullptr;
 }
 
 
-Entity::Entity(float x, float y, int width, int height, int health, int damage, float angle, bool isImmovable, SDL_Wrapper::Texture* texture, b2World* world)
+Entity::Entity(float x, float y, int width, int height, int health, int damage, float angle, bool isImmovable, SDL_Wrapper::Texture* texture)
 	: Entity()
 {
 	mSpawnPosX = x;
@@ -31,6 +33,8 @@ Entity::Entity(float x, float y, int width, int height, int health, int damage, 
 	mWidth = (float)width;
 	mHeight = (float)height;
 	mDamage = damage;
+
+	mInitAngle = angle;
 
 	mIsImmovable = isImmovable;
 
@@ -43,35 +47,9 @@ Entity::Entity(float x, float y, int width, int height, int health, int damage, 
 	mSdlCenterPoint = new SDL_Point();
 	mSdlCenterPoint->x = width / 2;
 	mSdlCenterPoint->y = height / 2;
-
-	b2BodyDef bodyDef;
-
-	if (mIsImmovable)
-		bodyDef.type = b2_kinematicBody;
-	else
-		bodyDef.type = b2_dynamicBody;
-
-	bodyDef.position.Set(x*Box2dHelper::Units, y*Box2dHelper::Units);
-	bodyDef.angle = angle - 4.71238898038f;
-	mb2Body = world->CreateBody(&bodyDef);
-
-	mb2LocalInitVec = b2Vec2(std::cos(angle), std::sin(angle));
-
-	b2PolygonShape dynamicBox;
-	dynamicBox.SetAsBox((mWidth*Box2dHelper::Units)*0.5f, (mHeight*Box2dHelper::Units)*0.5f, b2Vec2(0.0f, 0.0f), 0.0f);
-
-	b2FixtureDef fixtureDef;
-	fixtureDef.shape = &dynamicBox;
-	fixtureDef.density = 1.0f;
-	fixtureDef.friction = 0.0f;
-	fixtureDef.restitution = 0.0f;
-
-	mb2Body->SetUserData(this);
-
-	mb2Body->CreateFixture(&fixtureDef);
 }
 
-Entity::Entity(float x, float y, int width, int height, int health, int damage, float angle, SDL_Wrapper::Texture* texture, b2World* world)
+Entity::Entity(float x, float y, int width, int height, int health, int damage, float angle, SDL_Wrapper::Texture* texture)
 	: Entity()
 {
 	mSpawnPosX = x;
@@ -83,6 +61,8 @@ Entity::Entity(float x, float y, int width, int height, int health, int damage, 
 	mHeight = (float)height;
 	mDamage = damage;
 
+	mInitAngle = angle;
+
 	mSdlClipRect = new SDL_Rect();
 	mSdlClipRect->x = 0;
 	mSdlClipRect->y = 0;
@@ -92,32 +72,6 @@ Entity::Entity(float x, float y, int width, int height, int health, int damage, 
 	mSdlCenterPoint = new SDL_Point();
 	mSdlCenterPoint->x = width / 2;
 	mSdlCenterPoint->y = height / 2;
-
-	b2BodyDef bodyDef;
-
-	if (mIsImmovable)
-		bodyDef.type = b2_kinematicBody;
-	else
-		bodyDef.type = b2_dynamicBody;
-
-	bodyDef.position.Set(x*Box2dHelper::Units, y*Box2dHelper::Units);
-	bodyDef.angle = angle - 4.71238898038f;
-	mb2Body = world->CreateBody(&bodyDef);
-
-	mb2LocalInitVec = b2Vec2(std::cos(angle), std::sin(angle));
-
-	b2PolygonShape dynamicBox;
-	dynamicBox.SetAsBox((mWidth*Box2dHelper::Units)*0.5f, (mHeight*Box2dHelper::Units)*0.5f, b2Vec2(0.0f, 0.0f), 0.0f);
-
-	b2FixtureDef fixtureDef;
-	fixtureDef.shape = &dynamicBox;
-	fixtureDef.density = 1.0f;
-	fixtureDef.friction = 0.0f;
-	fixtureDef.restitution = 0.0f;
-
-	mb2Body->SetUserData(this);
-
-	mb2Body->CreateFixture(&fixtureDef);
 }
 
 Entity::~Entity()
@@ -135,6 +89,7 @@ Entity::~Entity()
 	}
 
 	mb2Body = nullptr;
+	mb2Fixture = nullptr;
 }
 
 b2Body* Entity::Getb2Body() const
@@ -179,6 +134,11 @@ float Entity::GetAngularVelocity() const
 int Entity::GetHealth() const
 {
 	return mHealth;
+}
+
+int Entity::GetHealth_Init() const
+{
+	return mInitialHealth;
 }
 
 bool Entity::IsAlive() const
@@ -237,6 +197,69 @@ void Entity::DoCollide(int collisionDamage)
 int Entity::GetCollisionDamage() const
 {
 	return mDamage;
+}
+
+bool Entity::Init_b2(b2World* world, bool isBullet)
+{
+	if (!mb2Body)
+	{
+		b2BodyDef bodyDef;
+
+		if (mIsImmovable)
+			bodyDef.type = b2_kinematicBody;
+		else
+			bodyDef.type = b2_dynamicBody;
+
+		bodyDef.position.Set(mSpawnPosX*Box2dHelper::Units, mSpawnPosY*Box2dHelper::Units);
+		bodyDef.angle = mInitAngle - 4.71238898038f;
+
+		mb2Body = world->CreateBody(&bodyDef);
+
+		mb2LocalInitVec = b2Vec2(std::cos(mInitAngle), std::sin(mInitAngle));
+
+		b2PolygonShape dynamicBox;
+		dynamicBox.SetAsBox((mWidth*Box2dHelper::Units)*0.5f, (mHeight*Box2dHelper::Units)*0.5f, b2Vec2(0.0f, 0.0f), 0.0f);
+
+		b2FixtureDef fixtureDef;
+		fixtureDef.shape = &dynamicBox;
+		fixtureDef.density = 1.0f;
+		fixtureDef.friction = 0.0f;
+		fixtureDef.restitution = 0.0f;
+
+		mb2Body->SetBullet(isBullet);
+
+		mb2Body->SetUserData(this);
+
+		mb2Fixture = mb2Body->CreateFixture(&fixtureDef);
+
+		if (mb2Body)
+			return true;
+	}
+
+	return false;
+}
+
+void Entity::SetCollisionEnabled(bool enabled)
+{
+	b2Filter filter = mb2Fixture->GetFilterData();
+
+	if (enabled)
+	{
+		filter.categoryBits = 1;
+		filter.maskBits = 1;
+	}
+	else
+	{
+		filter.categoryBits = 0;
+		filter.maskBits = 0;
+	}
+
+	mb2Fixture->SetFilterData(filter);
+}
+
+void Entity::Setb2BodyType(b2BodyType bodyType)
+{
+	mb2Body->SetType(bodyType);
 }
 
 void Entity::SetPosition(b2Vec2 pos)
