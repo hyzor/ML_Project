@@ -62,9 +62,11 @@ void MyGA::step(float dt)
 		MyGenome* myGenome = (MyGenome*)&pop->individual(i);
 		myGenome->Reset();
 		MyGenome::Init(*myGenome);
-		myGenome->Init_b2(mGame->GetWorld()->Getb2World(), false);
+		myGenome->Init_b2(mGame->GetWorld()->Getb2World(), false, Entity::Type::SHIP);
+		myGenome->Init_SDL();
 		myGenome->SetCollisionEnabled(false);
 		((Ship*)myGenome)->Reset();
+		myGenome->SetType(Entity::Type::SHIP);
 		myGenome->Setb2BodyType(b2_staticBody);
 		//myGenome->mCurMatchesWon = 0;
 		//myGenome->score(0.0f);
@@ -82,21 +84,12 @@ void MyGA::step(float dt)
 
 		bool gameIsRunning = true;
 
-		std::cout << "Running generation " << generation() << " game " << i << "...\n";
-
-		//int k;
-		/*
-		float geneSum = 0.0f;
-		float geneSum2 = 0.0f;
-		for (int k = 0; k < myGenome->length(); ++k)
-		{
-			geneSum += myGenome->gene(k);
-		}
-		*/
+		//std::cout << "Running generation " << generation() << " game " << i << "...\n";
 
 		int iterations = 0;
+		float time = 0.0f;
 
-		while (gameIsRunning && iterations < 1000)
+		while (gameIsRunning && (float)iterations < (50.0f/dt))
 		{
 			while (SDL_PollEvent(&sdlEvent) != 0)
 			{
@@ -116,6 +109,7 @@ void MyGA::step(float dt)
 
 			mEnemyShip->SetTarget(myGenome->GetPosition(true));
 			mGame->Update(dt);
+			//mEnemyShip->SetPosition(b2Vec2(800 * Box2dHelper::Units, 600 * Box2dHelper::Units));
 
 			if (!myGenome->IsAlive() || !mEnemyShip->IsAlive())
 			{
@@ -124,13 +118,20 @@ void MyGA::step(float dt)
 
 			mGame->Draw();
 			//mEnemyShip->RotateTo_Torque(myGenome->GetPosition(true), dt);
-
+		
 			mGame->GetWorld()->Flush();
+
+			time += dt;
 
 			iterations++;
 		}
 
-		float score = myGenome->GetHealth_Init() + (myGenome->GetHealth() - mEnemyShip->GetHealth());
+		std::cout << time << "\n";
+
+		float score = myGenome->GetHealth_Init() + myGenome->GetHealth() - mEnemyShip->GetHealth() + (float)iterations/500.0f;
+		
+		if (score < 0.0f)
+			score = 0.0f;
 
 		std::cout << "Finished generation " << generation() << " game " << i << " (Score: " << score << ")\n";
 
@@ -154,6 +155,9 @@ void MyGA::step(float dt)
 	for (int i = 0; i < tmpPop->size(); ++i)
 	{
 		//pop->destroy(GAPopulation::WORST, GAPopulation::RAW);
+		MyGenome* myGenome = (MyGenome*)&pop->worst();
+		mGame->GetWorld()->Getb2World()->DestroyBody(myGenome->Getb2Body());
+		pop->destroy(GAPopulation::WORST, GAPopulation::RAW);
 	}
 
 	// Finally we update the stats by one generation

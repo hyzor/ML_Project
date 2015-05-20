@@ -65,10 +65,14 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	//mPlayerShip = mWorld->SpawnEntity<Ship>(mScreenWidth/2, mScreenHeight/2, 48,
 		//64, 5, 1, 0.0f, false, mTextureManager->LoadTexture("Ship.png"));
 
-	Ship* enemyShip = mWorld->SpawnEntity<Ship>(mScreenWidth, mScreenHeight, 48,
+	Ship* enemyShip = mWorld->SpawnEntity<Ship>(mScreenWidth - (48/2), mScreenHeight - (64/2), 48,
 		64, 5, 1, 0.0f, false, mTextureManager->LoadTexture("Ship.png"));
 	enemyShip->Init(Ship::Type::STATIONARY);
-	enemyShip->Init_b2(mWorld->Getb2World(), false);
+	enemyShip->Init_b2(mWorld->Getb2World(), false, Entity::Type::SHIP);
+
+	Entity* obstacle = mWorld->SpawnEntity<Entity>(mScreenWidth / 2, mScreenHeight / 2, 64, 64, 1, 0, 0.0f, true, mTextureManager->LoadTexture("Obstacle.png"));
+	obstacle->Init_b2(mWorld->Getb2World(), false, Entity::Type::STATIC);
+	//enemyShip->SetType(Entity::Type::SHIP);
 
 	/*
 	Ship* enemyShip2 = mWorld->SpawnEntity<Ship>(mScreenWidth/2, mScreenHeight/2, 48,
@@ -95,14 +99,26 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	setArray.add(0.0f, mScreenHeight);
 	setArray.add(0.0f, mScreenWidth);
 	setArray.add(0.0f, mScreenHeight);
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
 
 	// GA population
 	mGaPop = new GAPopulation();
 	//mWorld->AddEntity(enemyShip);
 
 	mGaPop->initialize();
-	MyGenome* myGenome1 = new MyGenome(1, setArray, 0.0f, 0.0f, 48, 64, 5, 1, 0.0f, mTextureManager->LoadTexture("Ship.png"), MyGenome::Evaluate);
-	mGaPop->add(myGenome1);
+
+	MyGenome* myGenome1;
+		for (int i = 0; i < 10; i++){
+			myGenome1 = new MyGenome(1, setArray, 48.0f*0.5f, 64.0f*0.5f, 48, 64, 5, 1, 0.0f, mTextureManager->LoadTexture("Ship.png"), MyGenome::Evaluate);
+			mGaPop->add(myGenome1);
+		}
 	//mWorld->AddEntity(mGaPop->individual())
 	//mWorld->AddEntity(myGenome);
 
@@ -132,7 +148,7 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	for (int i = 0; i < mGA->populationSize(); ++i)
 	{
 		MyGenome* genome = (MyGenome*)&mGA->population().individual(i);
-		((Ship*)genome)->Init_b2(mWorld->Getb2World(), false);
+		((Ship*)genome)->Init_b2(mWorld->Getb2World(), false, Entity::Type::SHIP);
 		std::cout << genome->GetID() << ": ";
 
 		for (int j = 0; j < genome->length(); ++j)

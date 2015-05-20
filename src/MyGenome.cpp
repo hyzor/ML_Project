@@ -59,13 +59,16 @@ MyGenome& MyGenome::operator=(const GAGenome& orig)
 
 GAGenome* MyGenome::clone(CloneMethod) const
 {
-	//MyGenome* newGenome = new MyGenome(*this);
+	MyGenome* newGenome = new MyGenome(*this);
+	newGenome->mb2Body = nullptr;
+	newGenome->mSdlClipRect = nullptr;
+	newGenome->mSdlCenterPoint = nullptr;
 
 	//newGenome->copy(*this);
 
 	//newGenome->mWaypoints = this->mWaypoints;
 
-	return new MyGenome(*this);
+	return newGenome;
 }
 
 void MyGenome::copy(const GAGenome& orig)
@@ -79,6 +82,9 @@ void MyGenome::copy(const GAGenome& orig)
 	mID = origMyGenome->GetID();
 	mCurMatchesWon = 0;
 	mTotalMatchesWon = 0;
+	//mSdlClipRect = nullptr;
+	//mSdlCenterPoint = nullptr;
+	//mb2Body = nullptr;
 	//mAlleleSetArray = new GARealAlleleSetArray(*origMyGenome->GetAlleleSetArray());
 	//m1DArrayAlleleGenome = new GA1DArrayAlleleGenome<float>(*origMyGenome->Get1DArrayAlleleGenome());
 

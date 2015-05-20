@@ -19,6 +19,7 @@ Entity::Entity()
 	mIsImmovable = false;
 	mInitAngle = 0.0f;
 	mb2Fixture = nullptr;
+	mType = Type::STATIC;
 }
 
 
@@ -38,15 +39,7 @@ Entity::Entity(float x, float y, int width, int height, int health, int damage, 
 
 	mIsImmovable = isImmovable;
 
-	mSdlClipRect = new SDL_Rect();
-	mSdlClipRect->x = 0;
-	mSdlClipRect->y = 0;
-	mSdlClipRect->w = width;
-	mSdlClipRect->h = height;
-
-	mSdlCenterPoint = new SDL_Point();
-	mSdlCenterPoint->x = width / 2;
-	mSdlCenterPoint->y = height / 2;
+	Init_SDL();
 }
 
 Entity::Entity(float x, float y, int width, int height, int health, int damage, float angle, SDL_Wrapper::Texture* texture)
@@ -63,15 +56,7 @@ Entity::Entity(float x, float y, int width, int height, int health, int damage, 
 
 	mInitAngle = angle;
 
-	mSdlClipRect = new SDL_Rect();
-	mSdlClipRect->x = 0;
-	mSdlClipRect->y = 0;
-	mSdlClipRect->w = width;
-	mSdlClipRect->h = height;
-
-	mSdlCenterPoint = new SDL_Point();
-	mSdlCenterPoint->x = width / 2;
-	mSdlCenterPoint->y = height / 2;
+	Init_SDL();
 }
 
 Entity::~Entity()
@@ -199,7 +184,7 @@ int Entity::GetCollisionDamage() const
 	return mDamage;
 }
 
-bool Entity::Init_b2(b2World* world, bool isBullet)
+bool Entity::Init_b2(b2World* world, bool isBullet, unsigned int type)
 {
 	if (!mb2Body)
 	{
@@ -226,6 +211,9 @@ bool Entity::Init_b2(b2World* world, bool isBullet)
 		fixtureDef.friction = 0.0f;
 		fixtureDef.restitution = 0.0f;
 
+		mType = type;
+		fixtureDef.filter.categoryBits = type;
+
 		mb2Body->SetBullet(isBullet);
 
 		mb2Body->SetUserData(this);
@@ -239,14 +227,72 @@ bool Entity::Init_b2(b2World* world, bool isBullet)
 	return false;
 }
 
+bool Entity::Init_SDL()
+{
+	if (!mSdlClipRect)
+	{
+		mSdlClipRect = new SDL_Rect();
+		mSdlClipRect->x = 0;
+		mSdlClipRect->y = 0;
+		mSdlClipRect->w = (int)mWidth;
+		mSdlClipRect->h = (int)mHeight;
+	}
+
+	if (!mSdlCenterPoint)
+	{
+		mSdlCenterPoint = new SDL_Point();
+		mSdlCenterPoint->x = (int)mWidth / 2;
+		mSdlCenterPoint->y = (int)mHeight / 2;
+	}
+
+	return true;
+}
+
+void Entity::SetType(unsigned int Type)
+{
+	mType = Type;
+
+	b2Filter filter = mb2Fixture->GetFilterData();
+	filter.categoryBits = Type;
+	mb2Fixture->SetFilterData(filter);
+}
+
+unsigned int Entity::GetType() const
+{
+	return mType;
+}
+
 void Entity::SetCollisionEnabled(bool enabled)
 {
-	b2Filter filter = mb2Fixture->GetFilterData();
+	b2Filter filter;
+
+	for (b2Fixture* fixture = mb2Body->GetFixtureList(); fixture; fixture = fixture->GetNext())
+	{
+		if (fixture == mb2Fixture)
+			continue;
+
+		filter = fixture->GetFilterData();
+
+		if (enabled)
+		{
+			filter.categoryBits = Entity::Type::SENSOR;
+			filter.maskBits = Entity::Type::SHIP;
+		}
+		else
+		{
+			filter.categoryBits = 0;
+			filter.maskBits = 0;
+		}
+
+		fixture->SetFilterData(filter);
+	}
+
+	filter = mb2Fixture->GetFilterData();
 
 	if (enabled)
 	{
-		filter.categoryBits = 1;
-		filter.maskBits = 1;
+		filter.categoryBits = mType;
+		filter.maskBits = 0xFFFF;
 	}
 	else
 	{

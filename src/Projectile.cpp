@@ -25,7 +25,7 @@ void Projectile::Fire(float lifetime)
 	mLifetime = lifetime;
 	mAlivetimer = 0.0f;
 
-	float magnitude = 0.65f;
+	float magnitude = 0.5f;
 
 	//mInitVelocity = velocity;
 	//mb2Body->SetLinearVelocity(velocity);

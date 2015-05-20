@@ -9,6 +9,7 @@
 #include "Projectile.h"
 #include "World.h"
 #include "TextureManager.h"
+#include "Common.h"
 
 class World;
 
@@ -86,6 +87,10 @@ public:
 	void Init(int type);
 
 	void ClearWaypoints();
+
+	bool Init_b2(b2World* world, bool isBullet, unsigned int type);
+
+	void Reset();
 
 protected:
 	float mTorque;

@@ -32,7 +32,15 @@ void Ship::Update(float dt)
 		if (mType == Type::STATIONARY)
 		{
 			RotateTo_Torque(mTarget, dt);
-			Shoot();
+			//Shoot();
+			if (mEventTriggers[Events::SHOOT])
+			{
+				// Try to shoot
+				Shoot();
+			}
+
+			SetPosition(b2Vec2(mSpawnPosX*Box2dHelper::Units, mSpawnPosY*Box2dHelper::Units));
+			mb2Body->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
 		}
 		else
 		{
@@ -133,12 +141,14 @@ void Ship::RotateTo(b2Vec2 point, float degreesPerStep)
 float Ship::RotateTo_Torque(b2Vec2 point, float dt)
 {
 	float bodyAngle = GetAngle(true);
-
+	
 	b2Vec2 toTarget = point - GetPosition(true);
 	toTarget.Normalize();
 	float desiredAngle = atan2f(toTarget.x, -toTarget.y);
 
 	float nextAngle = bodyAngle + GetAngularVelocity() / 4.0f;
+	//float nextAngle = bodyAngle + (((GetAngularVelocity()) * dt) / 4.0f);
+
 	float totalRotation = desiredAngle - nextAngle;
 
 	//while (totalRotation < MathHelper::DegreesToRadians(-180)) totalRotation += MathHelper::DegreesToRadians(360);
@@ -146,7 +156,7 @@ float Ship::RotateTo_Torque(b2Vec2 point, float dt)
 
 	totalRotation = ConstrainAngle180(totalRotation);
 
-	float diff = std::abs(desiredAngle - ConstrainAngle180(GetAngle(true)));
+	//float diff = std::abs(desiredAngle - ConstrainAngle180(GetAngle(true)));
 
 	/*
 	if (diff < MathHelper::DegreesToRadians(5.0f))
@@ -155,9 +165,11 @@ float Ship::RotateTo_Torque(b2Vec2 point, float dt)
 	}
 	*/
 
-	float desiredAngularVelocity = totalRotation * 60.0f;
-	float torque = mb2Body->GetInertia() * desiredAngularVelocity / (dt);
+	//float desiredAngularVelocity = totalRotation / (dt);
+	//float torque = mb2Body->GetInertia() * desiredAngularVelocity / dt;
+
 	mb2Body->ApplyTorque(totalRotation < 0 ? -mTorque : mTorque, true);
+	//mb2Body->ApplyTorque(torque, true);
 
 	return desiredAngle;
 }
@@ -247,8 +259,9 @@ bool Ship::Shoot()
 		Projectile* newProjectile = World::GetInstance()->SpawnEntity<Projectile>(
 			GetPosition(false).x - (GetDimensions(false).y*0.50f)*std::cos(GetAngle_NonRetarded(true)) - ((float)height*0.7f)*std::cos(GetAngle_NonRetarded(true)),
 			GetPosition(false).y - (GetDimensions(false).y*0.50f)*std::sin(GetAngle_NonRetarded(true)) - ((float)height*0.7f)*std::sin(GetAngle_NonRetarded(true)),
-			width, height, 1, 1, GetAngle(true), false, TextureManager::GetInstance()->LoadTexture("Projectile.png"));
-		newProjectile->Init_b2(World::GetInstance()->Getb2World(), true);
+			width, height, 1, 0, GetAngle(true), false, TextureManager::GetInstance()->LoadTexture("Projectile.png"));
+		newProjectile->Init_b2(World::GetInstance()->Getb2World(), true, Entity::Type::PROJECTILE);
+		newProjectile->SetType(Entity::Type::PROJECTILE);
 		newProjectile->Fire(2.0f);
 		mCurCooldown = mCooldown;
 
@@ -488,4 +501,48 @@ void Ship::Init(int type)
 void Ship::ClearWaypoints()
 {
 	mWaypoints.clear();
+}
+
+bool Ship::Init_b2(b2World* world, bool isBullet, unsigned int type)
+{
+	Entity::Init_b2(world, isBullet, type);
+
+	b2FixtureDef sensorFixture;
+	b2PolygonShape polygonShape;
+
+	sensorFixture.isSensor = true;
+	sensorFixture.filter.categoryBits = Entity::Type::SENSOR;
+	sensorFixture.filter.maskBits = Entity::Type::SHIP;
+
+	float radius = 30.0f;
+	b2Vec2 vertices[8];
+	vertices[0].Set(0, 0);
+
+	float sensorAngle = 10.0f;
+
+	float angle = 0.0f;
+
+	for (int i = 0; i < 7; ++i)
+	{
+		angle = ((i / 6.0f * MathHelper::DegreesToRadians(sensorAngle)) - 4.71238898038f - MathHelper::DegreesToRadians(sensorAngle / 2)) * -1.0f;
+		vertices[i + 1].Set(radius*cosf(angle), radius*sinf(angle));
+	}
+
+	polygonShape.Set(vertices, 8);
+
+	sensorFixture.shape = &polygonShape;
+
+	mb2Body->CreateFixture(&sensorFixture);
+
+	return true;
+}
+
+void Ship::Reset()
+{
+	Entity::Reset();
+
+	for (int i = 0; i < Events::NUM_EVENTS; ++i)
+	{
+		mEventTriggers[i] = false;
+	}
 }

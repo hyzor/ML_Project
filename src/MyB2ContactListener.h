@@ -4,6 +4,7 @@
 #include <Box2D/Box2D.h>
 
 #include "Entity.h"
+#include "Ship.h"
 
 class MyB2ContactListener : public b2ContactListener
 {
