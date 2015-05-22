@@ -27,6 +27,8 @@ public:
 	void crossover(CrossoverFunc func);
 	void Init(Game* game, Ship* enemyShip);
 
+	float ObjectiveFunction(GAGenome* genome, float dt);
+
 	CrossoverFunc mCrossoverFunc;
 
 protected:

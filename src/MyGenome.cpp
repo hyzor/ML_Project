@@ -89,8 +89,8 @@ void MyGenome::copy(const GAGenome& orig)
 	//m1DArrayAlleleGenome = new GA1DArrayAlleleGenome<float>(*origMyGenome->Get1DArrayAlleleGenome());
 
 	// Copy parts of Ship
-	mWaypoints.clear();
-	mWaypoints = origMyGenome->mWaypoints;
+	//mWaypoints.clear();
+	//mWaypoints = origMyGenome->mWaypoints;
 }
 
 void MyGenome::SetScore(float score)
@@ -113,12 +113,16 @@ void MyGenome::Init(GAGenome& genome)
 
 	MyGenome* myGenome = (MyGenome*)&genome;
 
-	myGenome->mWaypoints.clear();
+	//myGenome->mWaypoints.clear();
+	myGenome->ClearWaypoints();
 
 	for (int i = 0; i < myGenome->length(); i += 2)
 	{
 		myGenome->AddWaypoint(b2Vec2(myGenome->gene(i)*Box2dHelper::Units, myGenome->gene(i+1)*Box2dHelper::Units));
 	}
+
+	if (myGenome->mWaypoints.size() > 0)
+		myGenome->mCurWaypoint = myGenome->mWaypoints.front();
 }
 
 int MyGenome::Mutate(GAGenome& genome, float probability)

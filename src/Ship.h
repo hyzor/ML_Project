@@ -11,6 +11,8 @@
 #include "TextureManager.h"
 #include "Common.h"
 
+#include <list>
+
 class World;
 
 class Ship : public Entity
@@ -48,6 +50,8 @@ public:
 		b2Vec2 position;
 		bool isIntermediate;
 
+		Waypoint* next;
+
 		Waypoint()
 		{
 			position = b2Vec2(0.0f, 0.0f);
@@ -74,7 +78,7 @@ public:
 	float RotateTo_Torque(b2Vec2 point, float dt);
 
 	void MoveTo(b2Vec2 point, float radius, float dt);
-	void MoveToWaypoint(Waypoint waypoint, float radius, float dt);
+	void MoveToWaypoint(Waypoint* waypoint, float radius, float dt);
 
 	b2Vec2 AddWaypoint(b2Vec2 waypoint);
 	b2Vec2 GetCurrentWaypoint() const;
@@ -104,7 +108,7 @@ protected:
 	bool mEventTriggers[Events::NUM_EVENTS];
 	bool Shoot();
 
-	b2Vec2 GetCorrectionWaypoint(b2Vec2 waypoint);
+	b2Vec2 GetCorrectionWaypoint(b2Vec2 waypoint, float dt);
 	float ConstrainAngle180(float angle);
 
 	void ProcessWaypoints(float dt);
@@ -112,7 +116,11 @@ protected:
 	//std::vector<b2Vec2> mWaypoints;
 
 	//std::deque<b2Vec2> mWaypoints;
-	std::deque<Waypoint> mWaypoints;
+	std::deque<Waypoint*> mWaypoints;
+
+	//std::list<Waypoint> mWaypoints;
+
+	Waypoint* mCurWaypoint;
 
 	bool mReachedCurWaypoint;
 

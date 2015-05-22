@@ -54,25 +54,26 @@ void MyGA::step(float dt)
 	// actual population
 	for (int i = 0; i < tmpPop->size(); ++i)
 	{
+		//MyGenome* newGenome = (MyGenome*)&tmpPop->individual(i);
+
 		pop->add(tmpPop->individual(i));
 	}
 
 	for (int i = 0; i < pop->size(); ++i)
 	{
 		MyGenome* myGenome = (MyGenome*)&pop->individual(i);
-		myGenome->Reset();
 		MyGenome::Init(*myGenome);
 		myGenome->Init_b2(mGame->GetWorld()->Getb2World(), false, Entity::Type::SHIP);
 		myGenome->Init_SDL();
+		myGenome->SetType(Entity::Type::SHIP);
+		myGenome->Reset();
+
 		myGenome->SetCollisionEnabled(false);
 		((Ship*)myGenome)->Reset();
-		myGenome->SetType(Entity::Type::SHIP);
 		myGenome->Setb2BodyType(b2_staticBody);
 		//myGenome->mCurMatchesWon = 0;
 		//myGenome->score(0.0f);
 	}
-
-	SDL_Event sdlEvent;
 
 	// Our objective function, "population based"
 	for (int i = 0; i < pop->size(); ++i)
@@ -80,71 +81,9 @@ void MyGA::step(float dt)
 		MyGenome* myGenome = (MyGenome*)&pop->individual(i);
 		myGenome->Setb2BodyType(b2_dynamicBody);
 		myGenome->SetCollisionEnabled(true);
-		mGame->GetWorld()->AddEntity((Ship*)myGenome);
-
-		bool gameIsRunning = true;
-
-		//std::cout << "Running generation " << generation() << " game " << i << "...\n";
-
-		int iterations = 0;
-		float time = 0.0f;
-
-		while (gameIsRunning && (float)iterations < (50.0f/dt))
-		{
-			while (SDL_PollEvent(&sdlEvent) != 0)
-			{
-				if (sdlEvent.type == SDL_KEYDOWN)
-				{
-					switch (sdlEvent.key.keysym.sym)
-					{
-					case SDLK_ESCAPE:
-						std::cout << "Aborting current game...\n";
-						gameIsRunning = false;
-						break;
-					}
-				}
-			}
-
-			//std::cout << myGenome->GetHealth() << "\n";
-
-			mEnemyShip->SetTarget(myGenome->GetPosition(true));
-			mGame->Update(dt);
-			//mEnemyShip->SetPosition(b2Vec2(800 * Box2dHelper::Units, 600 * Box2dHelper::Units));
-
-			if (!myGenome->IsAlive() || !mEnemyShip->IsAlive())
-			{
-				break;
-			}
-
-			mGame->Draw();
-			//mEnemyShip->RotateTo_Torque(myGenome->GetPosition(true), dt);
-		
-			mGame->GetWorld()->Flush();
-
-			time += dt;
-
-			iterations++;
-		}
-
-		std::cout << time << "\n";
-
-		float score = myGenome->GetHealth_Init() + myGenome->GetHealth() - mEnemyShip->GetHealth() + (float)iterations/500.0f;
-		
-		if (score < 0.0f)
-			score = 0.0f;
-
+		float score = ObjectiveFunction(myGenome, dt);
 		std::cout << "Finished generation " << generation() << " game " << i << " (Score: " << score << ")\n";
-
 		myGenome->SetScore(score);
-
-		myGenome->SetCollisionEnabled(false);
-		((Ship*)myGenome)->Reset();
-		mEnemyShip->Reset();
-		myGenome->Setb2BodyType(b2_staticBody);
-
-		mGame->GetWorld()->Flush();
-
-		mGame->GetWorld()->RemoveEntity((Ship*)myGenome);
 	}
 
 	// Now evaluate the population
@@ -173,4 +112,76 @@ void MyGA::Init(Game* game, Ship* enemyShip)
 {
 	mGame = game;
 	mEnemyShip = enemyShip;
+}
+
+float MyGA::ObjectiveFunction(GAGenome* genome, float dt)
+{
+	MyGenome* myGenome = (MyGenome*)genome;
+	mGame->GetWorld()->AddEntity((Ship*)myGenome);
+
+	SDL_Event sdlEvent;
+
+	bool gameIsRunning = true;
+
+	//std::cout << "Running generation " << generation() << " game " << i << "...\n";
+
+	int iterations = 0;
+	float time = 0.0f;
+
+	while (gameIsRunning && (float)iterations < (50.0f / dt))
+	{
+		while (SDL_PollEvent(&sdlEvent) != 0)
+		{
+			if (sdlEvent.type == SDL_KEYDOWN)
+			{
+				switch (sdlEvent.key.keysym.sym)
+				{
+				case SDLK_ESCAPE:
+					std::cout << "Aborting current game...\n";
+					gameIsRunning = false;
+					break;
+				}
+			}
+		}
+
+		//std::cout << myGenome->GetHealth() << "\n";
+
+		mEnemyShip->SetTarget(myGenome->GetPosition(true));
+		mGame->Update(dt);
+		//mEnemyShip->SetPosition(b2Vec2(800 * Box2dHelper::Units, 600 * Box2dHelper::Units));
+
+		if (!myGenome->IsAlive() || !mEnemyShip->IsAlive())
+		{
+			break;
+		}
+
+		mGame->Draw();
+		//mEnemyShip->RotateTo_Torque(myGenome->GetPosition(true), dt);
+
+		mGame->GetWorld()->Flush();
+
+		time += dt;
+
+		iterations++;
+	}
+
+	std::cout << time << "\n";
+
+	float score = myGenome->GetHealth_Init() + myGenome->GetHealth() - mEnemyShip->GetHealth() + (float)iterations / 500.0f;
+
+	if (score < 0.0f)
+		score = 0.0f;
+
+	//myGenome->SetScore(score);
+
+	myGenome->SetCollisionEnabled(false);
+	((Ship*)myGenome)->Reset();
+	mEnemyShip->Reset();
+	myGenome->Setb2BodyType(b2_staticBody);
+
+	mGame->GetWorld()->Flush();
+
+	mGame->GetWorld()->RemoveEntity((Ship*)myGenome);
+
+	return score;
 }

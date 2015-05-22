@@ -19,8 +19,9 @@ void Ship::Update(float dt)
 		{
 			if (mWaypoints.size() > 0)
 			{
-				if (mWaypoints.front().isIntermediate)
-					mWaypoints.pop_front();
+				if (mWaypoints.front()->isIntermediate)
+					//mWaypoints.pop_front();
+					mCurWaypoint = mCurWaypoint->next;
 			}
 		}
 
@@ -116,11 +117,18 @@ void Ship::InitShip()
 	mCooldown = 1.0f;
 	mCurCooldown = 0.0f;
 	mType = Type::NON_STATIONARY;
+	mCurWaypoint = nullptr;
 }
 
 Ship::~Ship()
 {
+	for (unsigned int i = 0; i < mWaypoints.size(); ++i)
+	{
+		if (mWaypoints[i])
+			delete mWaypoints[i];
+	}
 
+	mWaypoints.clear();
 }
 
 void Ship::ActivateEventTrigger(Events movement, bool activate)
@@ -128,15 +136,20 @@ void Ship::ActivateEventTrigger(Events movement, bool activate)
 	mEventTriggers[movement] = activate;
 }
 
-void Ship::RotateTo(b2Vec2 point, float degreesPerStep)
+float Ship::RotateTo_Torque(b2Vec2 point, float degreesPerStep)
 {
 	b2Vec2 toTarget = point - mb2Body->GetPosition();
 	toTarget.Normalize();
-	float desiredAngle = atan2f(-toTarget.x, toTarget.y);
+	float desiredAngle = atan2f(toTarget.x, -toTarget.y);
 	float totalRotation = desiredAngle - mb2Body->GetAngle();
-	float newAngle = mb2Body->GetAngle() + std::min(degreesPerStep, std::max(-degreesPerStep, totalRotation));
+	float newAngle = desiredAngle;
 	mb2Body->SetTransform(mb2Body->GetPosition(), newAngle);
+
+	return desiredAngle;
 }
+
+
+/*
 
 float Ship::RotateTo_Torque(b2Vec2 point, float dt)
 {
@@ -158,12 +171,12 @@ float Ship::RotateTo_Torque(b2Vec2 point, float dt)
 
 	//float diff = std::abs(desiredAngle - ConstrainAngle180(GetAngle(true)));
 
-	/*
-	if (diff < MathHelper::DegreesToRadians(5.0f))
-	{
-		mb2Body->SetAngularDamping(diff * 100.0f);
-	}
-	*/
+
+	//if (diff < MathHelper::DegreesToRadians(5.0f))
+	//{
+	//	mb2Body->SetAngularDamping(diff * 100.0f);
+	//}
+
 
 	//float desiredAngularVelocity = totalRotation / (dt);
 	//float torque = mb2Body->GetInertia() * desiredAngularVelocity / dt;
@@ -174,6 +187,7 @@ float Ship::RotateTo_Torque(b2Vec2 point, float dt)
 	return desiredAngle;
 }
 
+*/
 void Ship::MoveTo(b2Vec2 point, float radius, float dt)
 {
 	b2Vec2 pos = GetPosition(true);
@@ -191,7 +205,7 @@ void Ship::MoveTo(b2Vec2 point, float radius, float dt)
 	}
 	else
 	{
-		b2Vec2 destination = GetCorrectionWaypoint(point);
+		b2Vec2 destination = GetCorrectionWaypoint(point, dt);
 
 		float desiredAngle = RotateTo_Torque(destination, dt);
 
@@ -208,28 +222,31 @@ void Ship::MoveTo(b2Vec2 point, float radius, float dt)
 	}
 }
 
-void Ship::MoveToWaypoint(Waypoint waypoint, float radius, float dt)
+void Ship::MoveToWaypoint(Waypoint* waypoint, float radius, float dt)
 {
 	b2Vec2 pos = GetPosition(true);
-	float dist = sqrt(std::pow(waypoint.position.x - pos.x, 2) + std::pow(waypoint.position.y - pos.y, 2));
+	float dist = sqrt(std::pow(waypoint->position.x - pos.x, 2) + std::pow(waypoint->position.y - pos.y, 2));
 
-	if (waypoint.isIntermediate)
-		dist = sqrt(std::pow(mWaypoints.at(1).position.x - pos.x, 2) + std::pow(mWaypoints.at(1).position.y - pos.y, 2));
+	if (waypoint->isIntermediate)
+		dist = sqrt(std::pow(waypoint->next->position.x - pos.x, 2) + std::pow(waypoint->next->position.y - pos.y, 2));
 
-	if (dist <= radius*1.0f + (mb2Body->GetLinearVelocity()).Length()*0.5f)
+	if (dist <= radius*1.0f)
 	{
-		mb2Body->SetLinearDamping(15.0f);
+		mb2Body->SetLinearDamping(0.0f);
 		mb2Body->SetAngularDamping(0.0f);
 
-		if (dist <= 0.965f*(radius + (mb2Body->GetLinearVelocity()).Length()*0.5f))
+		mb2Body->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
+		mReachedCurWaypoint = true;
+
+		if (dist <= (0.965f)*(radius))
 		{
-			mReachedCurWaypoint = true;
+
 		}
 	}
 	else
 	{
-		b2Vec2 destination = GetCorrectionWaypoint(waypoint.position);
-		//destination = waypoint.position;
+		b2Vec2 destination = GetCorrectionWaypoint(waypoint->position, dt);
+		destination = waypoint->position;
 
 		float desiredAngle = RotateTo_Torque(destination, dt);
 
@@ -241,7 +258,7 @@ void Ship::MoveToWaypoint(Waypoint waypoint, float radius, float dt)
 		else
 		{
 			ActivateEventTrigger(Events::THRUST_FORWARD, false);
-			mb2Body->SetLinearDamping(0.8f);
+			mb2Body->SetLinearDamping(0.0f);
 		}
 	}
 }
@@ -259,7 +276,7 @@ bool Ship::Shoot()
 		Projectile* newProjectile = World::GetInstance()->SpawnEntity<Projectile>(
 			GetPosition(false).x - (GetDimensions(false).y*0.50f)*std::cos(GetAngle_NonRetarded(true)) - ((float)height*0.7f)*std::cos(GetAngle_NonRetarded(true)),
 			GetPosition(false).y - (GetDimensions(false).y*0.50f)*std::sin(GetAngle_NonRetarded(true)) - ((float)height*0.7f)*std::sin(GetAngle_NonRetarded(true)),
-			width, height, 1, 0, GetAngle(true), false, TextureManager::GetInstance()->LoadTexture("Projectile.png"));
+			width, height, 1, 1, GetAngle(true), false, TextureManager::GetInstance()->LoadTexture("Projectile.png"));
 		newProjectile->Init_b2(World::GetInstance()->Getb2World(), true, Entity::Type::PROJECTILE);
 		newProjectile->SetType(Entity::Type::PROJECTILE);
 		newProjectile->Fire(2.0f);
@@ -271,7 +288,7 @@ bool Ship::Shoot()
 	return successful;
 }
 
-b2Vec2 Ship::GetCorrectionWaypoint(b2Vec2 waypoint)
+b2Vec2 Ship::GetCorrectionWaypoint(b2Vec2 waypoint, float dt)
 {
 	b2Vec2 selfVel = mb2Body->GetLinearVelocity();
 	b2Vec2 selfPos = GetPosition(true);
@@ -337,10 +354,23 @@ b2Vec2 Ship::AddWaypoint(b2Vec2 waypoint)
 	if (intermediateWaypoint.x != waypoint.x
 		|| intermediateWaypoint.y != waypoint.y)
 	{
-		mWaypoints.push_back(Waypoint(intermediateWaypoint, true));
+		Waypoint* newWaypoint = new Waypoint(intermediateWaypoint, true);
+
+		if (mWaypoints.size() > 0)
+			mWaypoints.back()->next = newWaypoint;
+
+		mWaypoints.push_back(newWaypoint);
+		//mWaypoints.back(mWaypoints.size() - 1).next = &mWaypoints.back();
+		//mWaypoints.back().next = &mWaypoints.front();
 	}
 
-	mWaypoints.push_back(Waypoint(waypoint, false));
+	Waypoint* newWaypoint = new Waypoint(waypoint, false);
+
+	if (mWaypoints.size() > 0)
+		mWaypoints.back()->next = newWaypoint;
+
+	mWaypoints.push_back(newWaypoint);
+	mWaypoints.back()->next = mWaypoints.front();
 
 	return waypoint;
 }
@@ -349,13 +379,22 @@ void Ship::ProcessWaypoints(float dt)
 {
 	if (mWaypoints.size() > 0)
 	{
+		if (!mCurWaypoint)
+		{
+			mCurWaypoint = mWaypoints.front();
+		}
+
 		if (mReachedCurWaypoint)
 		{
-			if (mWaypoints.front().isIntermediate)
+			if (mCurWaypoint->isIntermediate)
 			{
-				mWaypoints.pop_front();
+				//mWaypoints.pop_front();
+
+				mCurWaypoint = mCurWaypoint->next;
 			}
-			mWaypoints.pop_front();
+
+			mCurWaypoint = mCurWaypoint->next;
+			//mWaypoints.pop_front();
 			mReachedCurWaypoint = false;
 		}
 	}
@@ -363,7 +402,8 @@ void Ship::ProcessWaypoints(float dt)
 	if (mWaypoints.size() > 0)
 	{
 		ActivateEventTrigger(Events::STABILIZE, false);
-		MoveToWaypoint(mWaypoints.front(), 40.0f*Box2dHelper::Units, dt);
+		//MoveToWaypoint(mWaypoints.front(), 40.0f*Box2dHelper::Units, dt);
+		MoveToWaypoint(mCurWaypoint, (40.0f*Box2dHelper::Units), dt);
 	}
 	else
 	{
@@ -374,7 +414,7 @@ void Ship::ProcessWaypoints(float dt)
 b2Vec2 Ship::GetCurrentWaypoint() const
 {
 	if (mWaypoints.size() > 0)
-		return mWaypoints.front().position;
+		return mWaypoints.front()->position;
 	else
 		return b2Vec2(-1.0f, -1.0f);
 }
@@ -500,7 +540,14 @@ void Ship::Init(int type)
 
 void Ship::ClearWaypoints()
 {
+	for (unsigned int i = 0; i < mWaypoints.size(); ++i)
+	{
+		if (mWaypoints[i])
+			delete mWaypoints[i];
+	}
+
 	mWaypoints.clear();
+	mCurWaypoint = nullptr;
 }
 
 bool Ship::Init_b2(b2World* world, bool isBullet, unsigned int type)
