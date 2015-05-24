@@ -114,7 +114,7 @@ void Ship::InitShip()
 {
 	mTorque = 30.0f;
 	mMagnitude = 20.0f;
-	mCooldown = 1.0f;
+	mCooldown = 3.0f;
 	mCurCooldown = 0.0f;
 	mType = Type::NON_STATIONARY;
 	mCurWaypoint = nullptr;
@@ -136,6 +136,7 @@ void Ship::ActivateEventTrigger(Events movement, bool activate)
 	mEventTriggers[movement] = activate;
 }
 
+/*
 float Ship::RotateTo_Torque(b2Vec2 point, float degreesPerStep)
 {
 	b2Vec2 toTarget = point - mb2Body->GetPosition();
@@ -147,9 +148,7 @@ float Ship::RotateTo_Torque(b2Vec2 point, float degreesPerStep)
 
 	return desiredAngle;
 }
-
-
-/*
+*/
 
 float Ship::RotateTo_Torque(b2Vec2 point, float dt)
 {
@@ -187,7 +186,6 @@ float Ship::RotateTo_Torque(b2Vec2 point, float dt)
 	return desiredAngle;
 }
 
-*/
 void Ship::MoveTo(b2Vec2 point, float radius, float dt)
 {
 	b2Vec2 pos = GetPosition(true);
@@ -230,23 +228,23 @@ void Ship::MoveToWaypoint(Waypoint* waypoint, float radius, float dt)
 	if (waypoint->isIntermediate)
 		dist = sqrt(std::pow(waypoint->next->position.x - pos.x, 2) + std::pow(waypoint->next->position.y - pos.y, 2));
 
-	if (dist <= radius*1.0f)
+	if (dist <= radius*1.0f + mb2Body->GetLinearVelocity().Length() * 0.5)
 	{
-		mb2Body->SetLinearDamping(0.0f);
+		mb2Body->SetLinearDamping(15.0f);
 		mb2Body->SetAngularDamping(0.0f);
 
-		mb2Body->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
-		mReachedCurWaypoint = true;
+		//mb2Body->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
+		//mReachedCurWaypoint = true;
 
-		if (dist <= (0.965f)*(radius))
+		if (dist <= (0.965f)*(radius + mb2Body->GetLinearVelocity().Length() * 0.5))
 		{
-
+			mReachedCurWaypoint = true;
 		}
 	}
 	else
 	{
 		b2Vec2 destination = GetCorrectionWaypoint(waypoint->position, dt);
-		destination = waypoint->position;
+		//destination = waypoint->position;
 
 		float desiredAngle = RotateTo_Torque(destination, dt);
 
@@ -258,7 +256,7 @@ void Ship::MoveToWaypoint(Waypoint* waypoint, float radius, float dt)
 		else
 		{
 			ActivateEventTrigger(Events::THRUST_FORWARD, false);
-			mb2Body->SetLinearDamping(0.0f);
+			mb2Body->SetLinearDamping(0.8f);
 		}
 	}
 }
@@ -522,6 +520,16 @@ void Ship::AddMovementPattern(int movementPattern, bool immediate)
 	}
 }
 
+void Ship::Draw(SDL_Renderer* renderer, double alpha)
+{
+	if (mCurWaypoint)
+		TextureManager::GetInstance()->LoadTexture("Waypoint.png")->Render((int)(mCurWaypoint->position.x*Box2dHelper::PixelsPerMeter - (16.0f*0.5f)),
+		(int)(mCurWaypoint->position.y*Box2dHelper::PixelsPerMeter - (16.0f*0.5f)),
+		renderer);
+
+	Entity::Draw(renderer, alpha);
+}
+
 void Ship::SetTarget(b2Vec2 target)
 {
 	mTarget = target;
@@ -587,6 +595,8 @@ bool Ship::Init_b2(b2World* world, bool isBullet, unsigned int type)
 void Ship::Reset()
 {
 	Entity::Reset();
+
+	mCurCooldown = 0.0f;
 
 	for (int i = 0; i < Events::NUM_EVENTS; ++i)
 	{

@@ -92,12 +92,24 @@ void World::Update(float dt)
 	}
 }
 
-void World::Draw(SDL_Renderer* renderer)
+void World::Draw(SDL_Renderer* renderer, double alpha)
 {
 	for (unsigned int i = 0; i < mEntities.size(); ++i)
 	{
 		if (mEntities[i]->IsAlive())
-			mEntities[i]->Draw(renderer);
+			mEntities[i]->Draw(renderer, alpha);
+	}
+}
+
+void World::DoPostProcessing()
+{
+	for (unsigned int i = 0; i < mEntities.size(); ++i)
+	{
+		if (mEntities[i]->IsAlive())
+		{
+			mEntities[i]->SetPrevPos(b2Vec2(mEntities[i]->GetPosition(true).x, mEntities[i]->GetPosition(true).y));
+			mEntities[i]->SetPrevAngle(mEntities[i]->GetAngle(true));
+		}
 	}
 }
 

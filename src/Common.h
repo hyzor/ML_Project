@@ -51,12 +51,25 @@ namespace MathHelper
 	{
 		return degrees * 0.0174532925f;
 	}
+
+	static double RadiansToDegrees_Double(double radians)
+	{
+		return radians * 57.2957795;
+	}
+
+	static double DegreesToRadians_Double(double degrees)
+	{
+		return degrees * 0.0174532925;
+	}
 }
 
 namespace Box2dHelper
 {
 	static const float PixelsPerMeter = 30.0f;
 	static const float Units = 1.0f / PixelsPerMeter;
+
+	static const int b2VelIterations = 6;
+	static const int b2PosIterations = 2;
 }
 
 #endif

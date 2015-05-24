@@ -42,9 +42,12 @@ public:
 
 	b2Vec2 GetDimensions(bool inMeters) const;
 
-	void Draw(SDL_Renderer* renderer);
+	virtual void Draw(SDL_Renderer* renderer, double alpha);
 	virtual void Update(float dt);
 	void Reset();
+
+	void SetPrevPos(b2Vec2 prevPos);
+	void SetPrevAngle(float angle);
 
 	void DoCollide(int collisionDamage);
 	int GetCollisionDamage() const;
@@ -65,10 +68,13 @@ protected:
 
 	b2Vec2 mb2LocalInitVec;
 
+	float mPrevPosX, mPrevPosY;
 	float mSpawnPosX, mSpawnPosY;
 	float mWidth, mHeight;
 	int mHealth;
 	int mDamage;
+
+	double mPrevAngle;
 
 	int mInitialHealth;
 

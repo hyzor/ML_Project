@@ -20,6 +20,8 @@ Entity::Entity()
 	mInitAngle = 0.0f;
 	mb2Fixture = nullptr;
 	mType = Type::STATIC;
+	mPrevPosX = mPrevPosY = 0.0f;
+	mPrevAngle = 0.0f;
 }
 
 
@@ -36,8 +38,12 @@ Entity::Entity(float x, float y, int width, int height, int health, int damage, 
 	mDamage = damage;
 
 	mInitAngle = angle;
+	mPrevAngle = (double)angle;
 
 	mIsImmovable = isImmovable;
+
+	mPrevPosX = mSpawnPosX*Box2dHelper::PixelsPerMeter;
+	mPrevPosY = mSpawnPosY*Box2dHelper::PixelsPerMeter;
 
 	Init_SDL();
 }
@@ -55,6 +61,10 @@ Entity::Entity(float x, float y, int width, int height, int health, int damage, 
 	mDamage = damage;
 
 	mInitAngle = angle;
+	mPrevAngle = (double)angle;
+
+	mPrevPosX = mSpawnPosX*Box2dHelper::PixelsPerMeter;
+	mPrevPosY = mSpawnPosY*Box2dHelper::PixelsPerMeter;
 
 	Init_SDL();
 }
@@ -139,9 +149,16 @@ b2Vec2 Entity::GetDimensions(bool inMeters) const
 		return b2Vec2(mWidth, mHeight);
 }
 
-void Entity::Draw(SDL_Renderer* renderer)
+void Entity::Draw(SDL_Renderer* renderer, double alpha)
 {
-	mTexture->Render((int)(GetPosition(false).x-(mWidth*0.5f)), (int)(GetPosition(false).y-(mHeight*0.5f)), renderer, mSdlClipRect, GetAngle(false), mSdlCenterPoint);
+	float posX_interpolated = mPrevPosX * (float)(1.0 - alpha) + GetPosition(true).x * (float)alpha;
+	float posY_interpolated = mPrevPosY * (float)(1.0 - alpha) + GetPosition(true).y * (float)alpha;
+
+	double angle_interpolated = mPrevAngle * (1.0 - alpha) + (double)GetAngle(true) * alpha;
+
+	mTexture->Render((int)((posX_interpolated*Box2dHelper::PixelsPerMeter) - (mWidth*0.5f)),
+		(int)((posY_interpolated*Box2dHelper::PixelsPerMeter) - (mHeight*0.5f)),
+		renderer, mSdlClipRect, MathHelper::RadiansToDegrees_Double(angle_interpolated), mSdlCenterPoint);
 	//TextureManager::GetInstance()->LoadTexture("BlueDot.png")->Render((int)GetPosition(false).x, (int)GetPosition(false).y, renderer, NULL, GetAngle(false));
 }
 
@@ -167,11 +184,26 @@ void Entity::Update(float dt)
 
 void Entity::Reset()
 {
-	mb2Body->SetTransform(b2Vec2(mSpawnPosX*Box2dHelper::Units, mSpawnPosY*Box2dHelper::Units), 0.0f);
+	mb2Body->SetTransform(b2Vec2(mSpawnPosX*Box2dHelper::Units, mSpawnPosY*Box2dHelper::Units), mInitAngle - 4.71238898038f);
 	mb2Body->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
 	mb2Body->SetAngularVelocity(0.0f);
+	mb2Body->SetAngularDamping(0.0f);
+	mb2Body->SetLinearDamping(0.0f);
 	mIsAlive = true;
 	mHealth = mInitialHealth;
+	mPrevPosX = mSpawnPosX*Box2dHelper::Units;
+	mPrevPosY = mSpawnPosY*Box2dHelper::Units;
+}
+
+void Entity::SetPrevPos(b2Vec2 prevPos)
+{
+	mPrevPosX = prevPos.x;
+	mPrevPosY = prevPos.y;
+}
+
+void Entity::SetPrevAngle(float angle)
+{
+	mPrevAngle = angle;
 }
 
 void Entity::DoCollide(int collisionDamage)

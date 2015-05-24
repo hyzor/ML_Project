@@ -52,7 +52,7 @@ Game::~Game()
 	//TextureManager::Destroy();
 }
 
-bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texturesDir, float dt)
+bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texturesDir, double dt_fixed)
 {
 	mDebugText = new SDL_Wrapper::Texture();
 
@@ -60,7 +60,7 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	mWorld = World::GetInstance();
 	mWorld->Init(mB2World, mScreenWidth, mScreenHeight);
 
-	mBackground = mTextureManager->LoadTexture(mAssetsDir + "Background_800x600.png");
+	mBackground = mTextureManager->LoadTexture(mAssetsDir + "Background_stars_800x600.png");
 
 	//mPlayerShip = mWorld->SpawnEntity<Ship>(mScreenWidth/2, mScreenHeight/2, 48,
 		//64, 5, 1, 0.0f, false, mTextureManager->LoadTexture("Ship.png"));
@@ -87,11 +87,11 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	setArray.add(0.0f, mScreenHeight);
 	setArray.add(0.0f, mScreenWidth);
 	setArray.add(0.0f, mScreenHeight);
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
 	/*
-	setArray.add(0.0f, mScreenWidth);
-	setArray.add(0.0f, mScreenHeight);
-	setArray.add(0.0f, mScreenWidth);
-	setArray.add(0.0f, mScreenHeight);
 	setArray.add(0.0f, mScreenWidth);
 	setArray.add(0.0f, mScreenHeight);
 	setArray.add(0.0f, mScreenWidth);
@@ -142,11 +142,6 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	mGA->selectScores(GAStatistics::AllScores);
 	mGA->Init(this, enemyShip);
 
-
-	//delete mGaPop;
-
-	//myGenome1->SetScore(999.0f);
-
 	std::cout << "Initial genomes:\n";
 	for (int i = 0; i < mGA->populationSize(); ++i)
 	{
@@ -181,11 +176,14 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	testGenome->ClearWaypoints();
 	testGenome->AddWaypoint(b2Vec2(200.0f*Box2dHelper::Units, 500.0f*Box2dHelper::Units));
 	testGenome->AddWaypoint(b2Vec2(600.0f*Box2dHelper::Units, 500.0f*Box2dHelper::Units));
+	testGenome->AddWaypoint(b2Vec2(600.0f*Box2dHelper::Units, 200.0f*Box2dHelper::Units));
+	testGenome->AddWaypoint(b2Vec2(200.0f*Box2dHelper::Units, 200.0f*Box2dHelper::Units));
 
+	auto currentTime = std::chrono::system_clock::now();
 
-	float dt_test = 1.0f / 60.0f;
-	float score = mGA->ObjectiveFunction(testGenome, dt_test);
-	std::cout << "Score: " << score << " dt: " << dt_test << "\n";
+	//float dt_test = 1.0f / 60.0f;
+	double score = mGA->ObjectiveFunction(testGenome, dt_fixed, std::chrono::system_clock::now(), 2.0f);
+	std::cout << "Score: " << score << " dt: " << dt_fixed << "\n";
 
 	MyGenome::Init(*testGenome);
 	testGenome->Reset();
@@ -197,20 +195,23 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	testGenome->ClearWaypoints();
 	testGenome->AddWaypoint(b2Vec2(200.0f*Box2dHelper::Units, 500.0f*Box2dHelper::Units));
 	testGenome->AddWaypoint(b2Vec2(600.0f*Box2dHelper::Units, 500.0f*Box2dHelper::Units));
+	testGenome->AddWaypoint(b2Vec2(600.0f*Box2dHelper::Units, 200.0f*Box2dHelper::Units));
+	testGenome->AddWaypoint(b2Vec2(200.0f*Box2dHelper::Units, 200.0f*Box2dHelper::Units));
 
-	dt_test = 1.0f / 30.0f;
-	score = mGA->ObjectiveFunction(testGenome, dt_test);
-	std::cout << "Score: " << score << " dt: " << dt_test << "\n";
+	//dt_test = 1.0f / 30.0f;
+	score = mGA->ObjectiveFunction(testGenome, dt_fixed, std::chrono::system_clock::now(), 10.0f);
+	std::cout << "Score: " << score << " dt: " << dt_fixed << "\n";
 
 	testGenome->Setb2BodyType(b2_staticBody);
 	testGenome->SetCollisionEnabled(false);
 
 	/*
+	float speedup = 10.0f;
 
 	// Evolve by explicitly calling the GA step function
 	while (!mGA->done())
 	{
-		mGA->step(dt);
+		mGA->step(dt_fixed, speedup);
 		//Update(dt);
 		//Draw();
 	}
@@ -255,9 +256,10 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	return true;
 }
 
-void Game::Update(float dt)
+void Game::UpdateWorld(float dt)
 {
-	mB2World->Step(dt, mB2VelIterations, mB2PosIterations);
+	//mB2World->Step(dt, mB2VelIterations, mB2PosIterations);
+	//DoPhysicsStep(dt, mB2VelIterations, mB2PosIterations);
 
 	mWorld->Update(dt);
 
@@ -265,14 +267,14 @@ void Game::Update(float dt)
 		//mPlayerShip = nullptr;
 }
 
-void Game::Draw()
+void Game::Draw(double alpha)
 {
 	SDL_SetRenderDrawColor(mSDL_Renderer, 0xFF, 0xFF, 0xFF, 0xFF);
 	SDL_RenderClear(mSDL_Renderer);
 
 	mBackground->Render(0, 0, mSDL_Renderer);
 
-	mWorld->Draw(mSDL_Renderer);
+	mWorld->Draw(mSDL_Renderer, alpha);
 
 	mB2World->DrawDebugData();
 
@@ -337,6 +339,11 @@ void Game::Draw()
 	SDL_RenderPresent(mSDL_Renderer);
 }
 
+void Game::DoPostProcessing()
+{
+	mWorld->DoPostProcessing();
+}
+
 Ship* Game::GetPlayerShip()
 {
 	if (!mPlayerShip)
@@ -354,4 +361,14 @@ World* Game::GetWorld() const
 void Game::Reset()
 {
 
+}
+
+void Game::RunGA(float dt)
+{
+
+}
+
+void Game::DoPhysicsStep(float dt, int b2VelIterations, int b2PosIterations)
+{
+	mB2World->Step(dt, b2VelIterations, b2PosIterations);
 }

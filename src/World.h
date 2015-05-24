@@ -32,7 +32,9 @@ public:
 
 	b2World* Getb2World() const;
 	void Update(float dt);
-	void Draw(SDL_Renderer* renderer);
+	void Draw(SDL_Renderer* renderer, double alpha);
+
+	void DoPostProcessing();
 
 	unsigned int GetWidth() const;
 	unsigned int GetHeight() const;

@@ -10,7 +10,7 @@ MyGA::MyGA(const GAPopulation& pop)
 	: GASteadyStateGA(pop)
 {}
 
-void MyGA::step(float dt)
+void MyGA::step(float dt_fixed, float& speedup)
 {
 	//std::cout << "Generation " << generation() << "\n";
 
@@ -81,7 +81,8 @@ void MyGA::step(float dt)
 		MyGenome* myGenome = (MyGenome*)&pop->individual(i);
 		myGenome->Setb2BodyType(b2_dynamicBody);
 		myGenome->SetCollisionEnabled(true);
-		float score = ObjectiveFunction(myGenome, dt);
+
+		float score = ObjectiveFunction(myGenome, dt_fixed, std::chrono::system_clock::now(), speedup);
 		std::cout << "Finished generation " << generation() << " game " << i << " (Score: " << score << ")\n";
 		myGenome->SetScore(score);
 	}
@@ -114,7 +115,7 @@ void MyGA::Init(Game* game, Ship* enemyShip)
 	mEnemyShip = enemyShip;
 }
 
-float MyGA::ObjectiveFunction(GAGenome* genome, float dt)
+double MyGA::ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::system_clock::time_point& time_now, float speedup)
 {
 	MyGenome* myGenome = (MyGenome*)genome;
 	mGame->GetWorld()->AddEntity((Ship*)myGenome);
@@ -126,10 +127,38 @@ float MyGA::ObjectiveFunction(GAGenome* genome, float dt)
 	//std::cout << "Running generation " << generation() << " game " << i << "...\n";
 
 	int iterations = 0;
-	float time = 0.0f;
+	double time = 0.0;
 
-	while (gameIsRunning && (float)iterations < (50.0f / dt))
+	std::chrono::system_clock::time_point time_start = std::chrono::system_clock::now();
+
+	double accumulator = 0.0;
+
+	//auto time_new = std::chrono::system_clock::now();
+	std::chrono::duration<double> time_since_start;
+
+	int physicsIterations = 0;
+
+	while (gameIsRunning && time < 25.0 && myGenome->IsAlive() && mEnemyShip->IsAlive())
 	{
+		mGame->GetWorld()->Flush();
+
+		auto time_new = std::chrono::system_clock::now();
+		time_since_start = time_new - time_start;
+		std::chrono::duration<double> frame_diff = time_new - time_now;
+		double frametime = frame_diff.count();
+
+		//frametime = std::min(dt_fixed*speedup, 0.25f);
+
+		//frametime = std::chrono::duration_cast<std::chrono::milliseconds>(frame_diff).count();
+		frametime *= (double)speedup;
+
+		if (frametime > 0.25)
+			frametime = 0.25;
+
+		time_now = time_new;
+		
+		accumulator += frametime;
+
 		while (SDL_PollEvent(&sdlEvent) != 0)
 		{
 			if (sdlEvent.type == SDL_KEYDOWN)
@@ -144,33 +173,47 @@ float MyGA::ObjectiveFunction(GAGenome* genome, float dt)
 			}
 		}
 
-		//std::cout << myGenome->GetHealth() << "\n";
-
-		mEnemyShip->SetTarget(myGenome->GetPosition(true));
-		mGame->Update(dt);
-		//mEnemyShip->SetPosition(b2Vec2(800 * Box2dHelper::Units, 600 * Box2dHelper::Units));
-
-		if (!myGenome->IsAlive() || !mEnemyShip->IsAlive())
+		while (accumulator >= dt_fixed)
 		{
-			break;
+			mEnemyShip->SetTarget(myGenome->GetPosition(true));
+			mGame->UpdateWorld(dt_fixed);
+
+			mGame->DoPhysicsStep(dt_fixed, Box2dHelper::b2VelIterations, Box2dHelper::b2PosIterations);
+			physicsIterations++;
+
+			accumulator -= dt_fixed;
 		}
 
-		mGame->Draw();
+		const double alpha = accumulator / dt_fixed;
+
+		mGame->GetWorld()->Getb2World()->ClearForces();
+
+		//std::cout << myGenome->GetHealth() << "\n";
+		//mEnemyShip->SetPosition(b2Vec2(800 * Box2dHelper::Units, 600 * Box2dHelper::Units));
+
+		mGame->Draw(alpha);
+		mGame->DoPostProcessing();
 		//mEnemyShip->RotateTo_Torque(myGenome->GetPosition(true), dt);
 
-		mGame->GetWorld()->Flush();
-
-		time += dt;
+		time += frametime;
 
 		iterations++;
 	}
 
-	std::cout << time << "\n";
+	std::chrono::system_clock::time_point end_time = std::chrono::system_clock::now();
 
-	float score = myGenome->GetHealth_Init() + myGenome->GetHealth() - mEnemyShip->GetHealth() + (float)iterations / 500.0f;
+	std::chrono::duration<double> frame_diff = end_time - time_start;
 
-	if (score < 0.0f)
-		score = 0.0f;
+	std::cout << "Time elapsed (s): " << frame_diff.count() << "\n";
+
+	std::cout << "Total frame time: " << time << "\n";
+
+	std::cout << myGenome->GetHealth() << " " << mEnemyShip->GetHealth() << "\n";
+
+	double score = (double)(myGenome->GetHealth_Init() + myGenome->GetHealth() - mEnemyShip->GetHealth()) + ((frame_diff.count()*(double)speedup) * 0.1);
+
+	if (score < 0.0)
+		score = 0.0;
 
 	//myGenome->SetScore(score);
 

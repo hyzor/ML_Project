@@ -22,6 +22,8 @@ decimal genome.
 #include <ctime>
 #include <stdlib.h>
 
+#include <chrono>
+
 #include <SDL/SDL.h>
 #include <SDL_ttf/SDL_ttf.h>
 #include <Box2D/Box2D.h>
@@ -133,7 +135,10 @@ int main(int argc, char **argv)
 	textureManager->Init(renderer, dir_assets);
 
 	// Game variables
-	float dt = 1.0f / 10.0f;
+	//float dt = 1.0f / 10.0f;
+	double dt_fixed = 1.0 / 60.0;
+	float t = 0.0f;
+	auto currentTime = std::chrono::system_clock::now();
 
 	debugDraw = new MyB2DebugDraw(renderer);
 
@@ -151,7 +156,7 @@ int main(int argc, char **argv)
 	box2Dworld->SetContactListener(contactListener);
 
 	Game* game = new Game(window, renderer, WINDOW_WIDTH, WINDOW_HEIGHT, box2Dworld, textureManager, font);
-	game->Init(dir_assets, dir_fonts, dir_textures, dt);
+	game->Init(dir_assets, dir_fonts, dir_textures, dt_fixed);
 	gameIsRunning = true;
 
 	vec2 curMouseClickPos;
@@ -239,7 +244,7 @@ int main(int argc, char **argv)
 		}
 
 		// Update game
-		game->Update(dt);
+		//game->Update(dt);
 
 		// Draw game
 		//game->Draw();

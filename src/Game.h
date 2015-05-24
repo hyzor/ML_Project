@@ -27,17 +27,23 @@ public:
 		b2World* _b2World, TextureManager* textureManager, TTF_Font* mainFont);
 	~Game();
 
-	bool Init(std::string assetsDir, std::string fontsDir, std::string texturesDir, float dt);
+	bool Init(std::string assetsDir, std::string fontsDir, std::string texturesDir, double dt_fixed);
 
-	void Update(float dt);
-	void Draw();
+	void DoPhysicsStep(float dt, int b2VelIterations, int b2PosIterations);
+	void UpdateWorld(float dt);
+	void Draw(double alpha);
+
+	void DoPostProcessing();
 
 	Ship* GetPlayerShip();
 	World* GetWorld() const;
 
 	void Reset();
 
+	void RunGA(float dt);
+
 private:
+
 	SDL_Window* mSDL_Window;
 	SDL_Event mSDL_Event;
 	SDL_Renderer* mSDL_Renderer;

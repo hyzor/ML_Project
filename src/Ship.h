@@ -85,6 +85,8 @@ public:
 
 	void AddMovementPattern(int movementPattern, bool immediate);
 
+	void Draw(SDL_Renderer* renderer, double alpha);
+
 	void SetTarget(b2Vec2 target);
 	b2Vec2 GetTarget() const;
 
