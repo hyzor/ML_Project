@@ -63,7 +63,7 @@ void MyGA::step(float dt_fixed, float& speedup)
 	{
 		MyGenome* myGenome = (MyGenome*)&pop->individual(i);
 		MyGenome::Init(*myGenome);
-		myGenome->Init_b2(mGame->GetWorld()->Getb2World(), false, Entity::Type::SHIP);
+		myGenome->Init_b2(mGame->GetWorld()->Getb2World(), false, Entity::Type::SHIP, myGenome->gene(myGenome->length()-1));
 		myGenome->Init_SDL();
 		myGenome->SetType(Entity::Type::SHIP);
 		myGenome->Reset();
@@ -90,7 +90,10 @@ void MyGA::step(float dt_fixed, float& speedup)
 	// Now evaluate the population
 	pop->evaluate(gaTrue);
 
+	pop->diversity();
 	pop->scale();
+
+	//std::cout << pop->div() << "\n";
 
 	for (int i = 0; i < tmpPop->size(); ++i)
 	{
@@ -102,6 +105,8 @@ void MyGA::step(float dt_fixed, float& speedup)
 
 	// Finally we update the stats by one generation
 	stats.update(*pop);
+
+	//std::cout << statistics() << "\n";
 }
 
 void MyGA::crossover(CrossoverFunc func)
@@ -152,8 +157,8 @@ double MyGA::ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::s
 		//frametime = std::chrono::duration_cast<std::chrono::milliseconds>(frame_diff).count();
 		frametime *= (double)speedup;
 
-		if (frametime > 0.25)
-			frametime = 0.25;
+		if (frametime > 0.5)
+			frametime = 0.5;
 
 		time_now = time_new;
 		

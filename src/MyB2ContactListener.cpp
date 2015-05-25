@@ -43,12 +43,13 @@ void MyB2ContactListener::BeginContact(b2Contact* contact)
 				{
 					Ship* entity1_Ship = static_cast<Ship*>(userdata1);
 					entity1_Ship->ActivateEventTrigger(Ship::SHOOT, true);
-
+					entity1_Ship->SetTarget(entity2->GetPosition(true));
 				}
 				else if (fixtureB->IsSensor() && !fixtureA->IsSensor())
 				{
 					Ship* entity2_Ship = static_cast<Ship*>(userdata2);
 					entity2_Ship->ActivateEventTrigger(Ship::SHOOT, true);
+					entity2_Ship->SetTarget(entity1->GetPosition(true));
 				}
 				else
 				{
@@ -96,7 +97,6 @@ void MyB2ContactListener::EndContact(b2Contact* contact)
 				{
 					Ship* entity1_Ship = static_cast<Ship*>(userdata1);
 					entity1_Ship->ActivateEventTrigger(Ship::SHOOT, false);
-
 				}
 				else if (fixtureB->IsSensor() && !fixtureA->IsSensor())
 				{

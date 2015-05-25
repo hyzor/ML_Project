@@ -94,7 +94,7 @@ public:
 
 	void ClearWaypoints();
 
-	bool Init_b2(b2World* world, bool isBullet, unsigned int type);
+	bool Init_b2(b2World* world, bool isBullet, unsigned int type, float sensorGene);
 
 	void Reset();
 
@@ -104,6 +104,9 @@ protected:
 
 	float mCooldown;
 	float mCurCooldown;
+	float mBaseCooldown;
+
+	bool mDoProcessWaypoints;
 
 	void InitShip();
 
@@ -128,6 +131,8 @@ protected:
 
 	b2Vec2 mTarget;
 	int mType;
+
+	b2Fixture* mSensorFixture;
 };
 
 #endif

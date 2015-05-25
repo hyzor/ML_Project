@@ -22,6 +22,10 @@ Entity::Entity()
 	mType = Type::STATIC;
 	mPrevPosX = mPrevPosY = 0.0f;
 	mPrevAngle = 0.0f;
+	mIsColliding = false;
+	mCurCollisionDamage = 0;
+	mCollisionCooldown = 0.5f;
+	mCurCollisionCooldown = 0.0f;
 }
 
 
@@ -158,12 +162,21 @@ void Entity::Draw(SDL_Renderer* renderer, double alpha)
 
 	mTexture->Render((int)((posX_interpolated*Box2dHelper::PixelsPerMeter) - (mWidth*0.5f)),
 		(int)((posY_interpolated*Box2dHelper::PixelsPerMeter) - (mHeight*0.5f)),
-		renderer, mSdlClipRect, MathHelper::RadiansToDegrees_Double(angle_interpolated), mSdlCenterPoint);
+		renderer, nullptr, MathHelper::RadiansToDegrees_Double(angle_interpolated), mSdlCenterPoint);
 	//TextureManager::GetInstance()->LoadTexture("BlueDot.png")->Render((int)GetPosition(false).x, (int)GetPosition(false).y, renderer, NULL, GetAngle(false));
 }
 
 void Entity::Update(float dt)
 {
+	if (mIsColliding && mCurCollisionCooldown <= 0.0f)
+	{
+		//mHealth -= mCurCollisionDamage;
+		mCurCollisionCooldown = mCollisionCooldown;
+	}
+
+	if (mCurCollisionCooldown > 0.0f)
+		mCurCollisionCooldown -= dt;
+
 	if (mHealth <= 0)
 	{
 		mIsAlive = false;
@@ -209,6 +222,12 @@ void Entity::SetPrevAngle(float angle)
 void Entity::DoCollide(int collisionDamage)
 {
 	mHealth -= collisionDamage;
+	mCurCollisionDamage = collisionDamage;
+
+	if (!mIsColliding)
+	{
+		mCurCollisionCooldown = mCollisionCooldown;
+	}
 }
 
 int Entity::GetCollisionDamage() const
@@ -241,7 +260,7 @@ bool Entity::Init_b2(b2World* world, bool isBullet, unsigned int type)
 		fixtureDef.shape = &dynamicBox;
 		fixtureDef.density = 1.0f;
 		fixtureDef.friction = 0.0f;
-		fixtureDef.restitution = 0.0f;
+		fixtureDef.restitution = 0.1f;
 
 		mType = type;
 		fixtureDef.filter.categoryBits = type;

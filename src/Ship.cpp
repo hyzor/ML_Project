@@ -45,7 +45,8 @@ void Ship::Update(float dt)
 		}
 		else
 		{
-			ProcessWaypoints(dt);
+			if (mDoProcessWaypoints)
+				ProcessWaypoints(dt);
 
 			//b2Vec2 forceDirection = mb2Body->GetWorldVector(mb2LocalInitVec);
 			//forceDirection *= mMagnitude;
@@ -96,14 +97,33 @@ void Ship::Update(float dt)
 
 			if (mEventTriggers[Events::STABILIZE])
 			{
-				mb2Body->SetLinearDamping(5.0f);
-				mb2Body->SetAngularDamping(5.0f);
+				mb2Body->SetLinearDamping(20.0f);
+				mb2Body->SetAngularDamping(20.0f);
 			}
 
 			if (mEventTriggers[Events::SHOOT])
 			{
+				mDoProcessWaypoints = false;
+				float desiredAngle = RotateTo_Torque(mTarget, dt);
+
+				float diff = std::abs(desiredAngle - ConstrainAngle180(GetAngle(true)));
+
+				if (diff < MathHelper::DegreesToRadians(2.0f))
+				{
+					Shoot();
+
+					//mEventTriggers[Events::STABILIZE] = false;
+					mb2Body->SetLinearDamping(0.0f);
+					mDoProcessWaypoints = true;
+				}
+				else
+				{
+					mb2Body->SetLinearDamping(20.0f);
+					//mEventTriggers[Events::STABILIZE] = true;
+				}
+
 				// Try to shoot
-				Shoot();
+				//Shoot();
 			}
 		}
 
@@ -115,9 +135,12 @@ void Ship::InitShip()
 	mTorque = 30.0f;
 	mMagnitude = 20.0f;
 	mCooldown = 3.0f;
+	mBaseCooldown = 3.0f;
 	mCurCooldown = 0.0f;
 	mType = Type::NON_STATIONARY;
 	mCurWaypoint = nullptr;
+	mSensorFixture = nullptr;
+	mDoProcessWaypoints = true;
 }
 
 Ship::~Ship()
@@ -558,9 +581,15 @@ void Ship::ClearWaypoints()
 	mCurWaypoint = nullptr;
 }
 
-bool Ship::Init_b2(b2World* world, bool isBullet, unsigned int type)
+bool Ship::Init_b2(b2World* world, bool isBullet, unsigned int type, float sensorGene)
 {
 	Entity::Init_b2(world, isBullet, type);
+
+	if (mSensorFixture)
+	{
+		mb2Body->DestroyFixture(mSensorFixture);
+		mSensorFixture = nullptr;
+	}
 
 	b2FixtureDef sensorFixture;
 	b2PolygonShape polygonShape;
@@ -573,7 +602,13 @@ bool Ship::Init_b2(b2World* world, bool isBullet, unsigned int type)
 	b2Vec2 vertices[8];
 	vertices[0].Set(0, 0);
 
-	float sensorAngle = 10.0f;
+	float sensorAngle = 20.0f;
+
+	if (sensorGene != 0.0f)
+	{
+		sensorAngle = sensorAngle * sensorGene;
+		mCooldown = 2.0f * mBaseCooldown * (1.0f - sensorGene);
+	}
 
 	float angle = 0.0f;
 
@@ -587,7 +622,7 @@ bool Ship::Init_b2(b2World* world, bool isBullet, unsigned int type)
 
 	sensorFixture.shape = &polygonShape;
 
-	mb2Body->CreateFixture(&sensorFixture);
+	mSensorFixture = mb2Body->CreateFixture(&sensorFixture);
 
 	return true;
 }

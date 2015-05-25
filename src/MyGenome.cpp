@@ -116,7 +116,7 @@ void MyGenome::Init(GAGenome& genome)
 	//myGenome->mWaypoints.clear();
 	myGenome->ClearWaypoints();
 
-	for (int i = 0; i < myGenome->length(); i += 2)
+	for (int i = 0; i < myGenome->length()-1; i += 2)
 	{
 		myGenome->AddWaypoint(b2Vec2(myGenome->gene(i)*Box2dHelper::Units, myGenome->gene(i+1)*Box2dHelper::Units));
 	}

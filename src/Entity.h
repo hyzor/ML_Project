@@ -86,6 +86,13 @@ protected:
 	b2Fixture* mb2Fixture;
 
 	unsigned int mType;
+
+	bool mIsColliding;
+	int mCurCollisionDamage;
+	float mCollisionCooldown;
+	float mCurCollisionCooldown;
+
+	std::vector<Entity*> mCollisionEntities;
 };
 
 #endif

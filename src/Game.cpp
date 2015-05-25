@@ -68,11 +68,17 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	Ship* enemyShip = mWorld->SpawnEntity<Ship>(mScreenWidth - (48/2), mScreenHeight - (64/2), 48,
 		64, 5, 1, 0.0f, false, mTextureManager->LoadTexture("Ship.png"));
 	enemyShip->Init(Ship::Type::STATIONARY);
-	enemyShip->Init_b2(mWorld->Getb2World(), false, Entity::Type::SHIP);
+	enemyShip->Init_b2(mWorld->Getb2World(), false, Entity::Type::SHIP, 0.0f);
 
 	Entity* obstacle = mWorld->SpawnEntity<Entity>(mScreenWidth / 2, mScreenHeight / 2, 64, 64, 1, 2, 0.0f, true, mTextureManager->LoadTexture("Obstacle.png"));
 	obstacle->Init_b2(mWorld->Getb2World(), false, Entity::Type::STATIC);
 	//enemyShip->SetType(Entity::Type::SHIP);
+
+	obstacle = mWorld->SpawnEntity<Entity>(mScreenWidth / 4, mScreenHeight / 4, 64, 64, 1, 2, 0.0f, true, mTextureManager->LoadTexture("Obstacle.png"));
+	obstacle->Init_b2(mWorld->Getb2World(), false, Entity::Type::STATIC);
+
+	obstacle = mWorld->SpawnEntity<Entity>((int)((float)mScreenWidth / 1.25f), (int)((float)mScreenHeight / 1.25f), 64, 64, 1, 2, 0.0f, true, mTextureManager->LoadTexture("Obstacle.png"));
+	obstacle->Init_b2(mWorld->Getb2World(), false, Entity::Type::STATIC);
 
 	/*
 	Ship* enemyShip2 = mWorld->SpawnEntity<Ship>(mScreenWidth/2, mScreenHeight/2, 48,
@@ -91,6 +97,8 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	setArray.add(0.0f, mScreenHeight);
 	setArray.add(0.0f, mScreenWidth);
 	setArray.add(0.0f, mScreenHeight);
+
+	setArray.add(0.1f, 0.9f);
 	/*
 	setArray.add(0.0f, mScreenWidth);
 	setArray.add(0.0f, mScreenHeight);
@@ -133,13 +141,14 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	// GA
 	mGA = new MyGA(*mGaPop);
 	mGA->crossover(MyGenome::OnePointCrossover);
-	mGA->nGenerations(100);
+	mGA->nGenerations(5);
 	mGA->pMutation(0.15f);
 	mGA->pCrossover(0.95f);
 	mGA->scoreFilename("GA_score.dat");
-	mGA->scoreFrequency(10);
-	mGA->flushFrequency(50);
+	mGA->scoreFrequency(1);
+	mGA->flushFrequency(1);
 	mGA->selectScores(GAStatistics::AllScores);
+	mGA->recordDiversity(gaTrue);
 	mGA->Init(this, enemyShip);
 
 	std::cout << "Initial genomes:\n";
@@ -149,7 +158,7 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 		//((Ship*)genome)->Init_b2(mWorld->Getb2World(), false, Entity::Type::SHIP);
 
 		MyGenome::Init(*genome);
-		genome->Init_b2(GetWorld()->Getb2World(), false, Entity::Type::SHIP);
+		genome->Init_b2(GetWorld()->Getb2World(), false, Entity::Type::SHIP, genome->gene(genome->length()-1));
 		genome->Init_SDL();
 		genome->SetType(Entity::Type::SHIP);
 		genome->Reset();
@@ -175,15 +184,15 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 
 	testGenome->ClearWaypoints();
 	testGenome->AddWaypoint(b2Vec2(200.0f*Box2dHelper::Units, 500.0f*Box2dHelper::Units));
-	testGenome->AddWaypoint(b2Vec2(600.0f*Box2dHelper::Units, 500.0f*Box2dHelper::Units));
+	testGenome->AddWaypoint(b2Vec2(600.0f*Box2dHelper::Units, 480.0f*Box2dHelper::Units));
 	testGenome->AddWaypoint(b2Vec2(600.0f*Box2dHelper::Units, 200.0f*Box2dHelper::Units));
 	testGenome->AddWaypoint(b2Vec2(200.0f*Box2dHelper::Units, 200.0f*Box2dHelper::Units));
 
 	auto currentTime = std::chrono::system_clock::now();
 
 	//float dt_test = 1.0f / 60.0f;
-	double score = mGA->ObjectiveFunction(testGenome, dt_fixed, std::chrono::system_clock::now(), 2.0f);
-	std::cout << "Score: " << score << " dt: " << dt_fixed << "\n";
+	//double score = mGA->ObjectiveFunction(testGenome, dt_fixed, std::chrono::system_clock::now(), 2.0f);
+	//std::cout << "Score: " << score << " dt: " << dt_fixed << "\n";
 
 	MyGenome::Init(*testGenome);
 	testGenome->Reset();
@@ -194,18 +203,17 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 
 	testGenome->ClearWaypoints();
 	testGenome->AddWaypoint(b2Vec2(200.0f*Box2dHelper::Units, 500.0f*Box2dHelper::Units));
-	testGenome->AddWaypoint(b2Vec2(600.0f*Box2dHelper::Units, 500.0f*Box2dHelper::Units));
+	testGenome->AddWaypoint(b2Vec2(640.0f*Box2dHelper::Units, 480.0f*Box2dHelper::Units));
 	testGenome->AddWaypoint(b2Vec2(600.0f*Box2dHelper::Units, 200.0f*Box2dHelper::Units));
 	testGenome->AddWaypoint(b2Vec2(200.0f*Box2dHelper::Units, 200.0f*Box2dHelper::Units));
 
 	//dt_test = 1.0f / 30.0f;
-	score = mGA->ObjectiveFunction(testGenome, dt_fixed, std::chrono::system_clock::now(), 10.0f);
-	std::cout << "Score: " << score << " dt: " << dt_fixed << "\n";
+	//score = mGA->ObjectiveFunction(testGenome, dt_fixed, std::chrono::system_clock::now(), 10.0f);
+	//std::cout << "Score: " << score << " dt: " << dt_fixed << "\n";
 
 	testGenome->Setb2BodyType(b2_staticBody);
 	testGenome->SetCollisionEnabled(false);
 
-	/*
 	float speedup = 10.0f;
 
 	// Evolve by explicitly calling the GA step function
@@ -215,7 +223,6 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 		//Update(dt);
 		//Draw();
 	}
-	*/
 
 	std::cout << "\n-----------------------\n\n";
 
@@ -251,7 +258,7 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	std::cout << "Best of generation data is in file '" << mGA->scoreFilename() << "'\n";
 
 	// Dump statistics
-	//std::cout << ga.statistics() << "\n";
+	std::cout << mGA->statistics() << "\n";
 
 	return true;
 }
@@ -276,7 +283,7 @@ void Game::Draw(double alpha)
 
 	mWorld->Draw(mSDL_Renderer, alpha);
 
-	mB2World->DrawDebugData();
+	//mB2World->DrawDebugData();
 
 	// DEBUG
 	/*

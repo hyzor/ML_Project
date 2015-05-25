@@ -152,7 +152,7 @@ int main(int argc, char **argv)
 	// Box2D
 	b2Vec2 gravity(0.0f, 0.0f);
 	b2World* box2Dworld = new b2World(gravity);
-	//box2Dworld->SetDebugDraw(debugDraw);
+	box2Dworld->SetDebugDraw(debugDraw);
 	box2Dworld->SetContactListener(contactListener);
 
 	Game* game = new Game(window, renderer, WINDOW_WIDTH, WINDOW_HEIGHT, box2Dworld, textureManager, font);
