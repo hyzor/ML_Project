@@ -98,6 +98,8 @@ public:
 
 	void Reset();
 
+	void DoProcessWaypoints(bool doProcess);
+
 protected:
 	float mTorque;
 	float mMagnitude;

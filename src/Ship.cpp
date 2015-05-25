@@ -103,22 +103,24 @@ void Ship::Update(float dt)
 
 			if (mEventTriggers[Events::SHOOT])
 			{
-				mDoProcessWaypoints = false;
+				DoProcessWaypoints(false);
 				float desiredAngle = RotateTo_Torque(mTarget, dt);
 
 				float diff = std::abs(desiredAngle - ConstrainAngle180(GetAngle(true)));
 
-				if (diff < MathHelper::DegreesToRadians(2.0f))
+				if (diff < MathHelper::DegreesToRadians(1.5f))
 				{
-					Shoot();
-
+					if (Shoot())
+					{
+						mb2Body->SetLinearDamping(0.0f);
+						DoProcessWaypoints(true);
+						mEventTriggers[Events::SHOOT] = false;
+					}
 					//mEventTriggers[Events::STABILIZE] = false;
-					mb2Body->SetLinearDamping(0.0f);
-					mDoProcessWaypoints = true;
 				}
 				else
 				{
-					mb2Body->SetLinearDamping(20.0f);
+					mb2Body->SetLinearDamping(10.0f);
 					//mEventTriggers[Events::STABILIZE] = true;
 				}
 
@@ -602,7 +604,7 @@ bool Ship::Init_b2(b2World* world, bool isBullet, unsigned int type, float senso
 	b2Vec2 vertices[8];
 	vertices[0].Set(0, 0);
 
-	float sensorAngle = 20.0f;
+	float sensorAngle = 30.0f;
 
 	if (sensorGene != 0.0f)
 	{
@@ -614,7 +616,7 @@ bool Ship::Init_b2(b2World* world, bool isBullet, unsigned int type, float senso
 
 	for (int i = 0; i < 7; ++i)
 	{
-		angle = ((i / 6.0f * MathHelper::DegreesToRadians(sensorAngle)) - 4.71238898038f - MathHelper::DegreesToRadians(sensorAngle / 2)) * -1.0f;
+		angle = ((i / 6.0f * MathHelper::DegreesToRadians(sensorAngle)) - 4.71238898038f - MathHelper::DegreesToRadians(sensorAngle * 0.5f)) * -1.0f;
 		vertices[i + 1].Set(radius*cosf(angle), radius*sinf(angle));
 	}
 
@@ -637,4 +639,9 @@ void Ship::Reset()
 	{
 		mEventTriggers[i] = false;
 	}
+}
+
+void Ship::DoProcessWaypoints(bool doProcess)
+{
+	mDoProcessWaypoints = doProcess;
 }

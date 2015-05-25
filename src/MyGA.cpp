@@ -215,7 +215,7 @@ double MyGA::ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::s
 
 	std::cout << myGenome->GetHealth() << " " << mEnemyShip->GetHealth() << "\n";
 
-	double score = (double)(myGenome->GetHealth_Init() + myGenome->GetHealth() - mEnemyShip->GetHealth()) + ((frame_diff.count()*(double)speedup) * 0.1);
+	double score = (double)(myGenome->GetHealth_Init() + myGenome->GetHealth() - mEnemyShip->GetHealth()) + ((float)iterations * 0.01f);
 
 	if (score < 0.0)
 		score = 0.0;

@@ -50,6 +50,8 @@ public:
 	void SetPrevAngle(float angle);
 
 	void DoCollide(int collisionDamage);
+	void AddCollisionEntity(Entity* collisionEntity);
+	void RemoveCollisionEntity(Entity* collisionEntity);
 	int GetCollisionDamage() const;
 
 	virtual bool Init_b2(b2World* world, bool isBullet, unsigned int type);

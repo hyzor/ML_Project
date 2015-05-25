@@ -230,6 +230,24 @@ void Entity::DoCollide(int collisionDamage)
 	}
 }
 
+void Entity::AddCollisionEntity(Entity* collisionEntity)
+{
+	mCollisionEntities.push_back(collisionEntity);
+}
+
+void Entity::RemoveCollisionEntity(Entity* collisionEntity)
+{
+	for (unsigned int i = 0; i < mCollisionEntities.size(); ++i)
+	{
+		if (mCollisionEntities[i] == collisionEntity)
+		{
+			std::swap(mCollisionEntities[i], mCollisionEntities.back());
+			mCollisionEntities.pop_back();
+			break;
+		}
+	}
+}
+
 int Entity::GetCollisionDamage() const
 {
 	return mDamage;
@@ -260,7 +278,7 @@ bool Entity::Init_b2(b2World* world, bool isBullet, unsigned int type)
 		fixtureDef.shape = &dynamicBox;
 		fixtureDef.density = 1.0f;
 		fixtureDef.friction = 0.0f;
-		fixtureDef.restitution = 0.1f;
+		fixtureDef.restitution = 0.15f;
 
 		mType = type;
 		fixtureDef.filter.categoryBits = type;

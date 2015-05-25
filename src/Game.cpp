@@ -245,14 +245,10 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	// Dump the results of the GA to the screen.
 	MyGenome* genome = (MyGenome*)&mGA->statistics().bestIndividual();
 
-	float geneSumWinner = 0.0f;
 	for (int i = 0; i < genome->length(); ++i)
 	{
-		geneSumWinner += genome->gene(i);
 		std::cout << genome->gene(i) << "\n";
 	}
-
-	//std::cout << geneSum1 << ", " << geneSum2 << ", " << geneSumWinner << "\n";
 
 	std::cout << "The best individual is genome " << genome->GetID() << "\n";
 	std::cout << "Best of generation data is in file '" << mGA->scoreFilename() << "'\n";
