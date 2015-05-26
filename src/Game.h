@@ -22,12 +22,19 @@ class MyGA2;
 class Game
 {
 public:
+
+	static enum Crossover
+	{
+		ONEPOINT,
+		TWOPOINT,
+	};
+
 	Game();
 	Game(SDL_Window* sdlWindow, SDL_Renderer* sdlRenderer, unsigned int screenW, unsigned int screenH,
 		b2World* _b2World, TextureManager* textureManager, TTF_Font* mainFont);
 	~Game();
 
-	bool Init(std::string assetsDir, std::string fontsDir, std::string texturesDir, double dt_fixed);
+	bool Init(std::string assetsDir, std::string fontsDir, std::string texturesDir);
 
 	void DoPhysicsStep(float dt, int b2VelIterations, int b2PosIterations);
 	void UpdateWorld(float dt);
@@ -40,13 +47,13 @@ public:
 
 	void Reset();
 
-	void RunGA(float dt);
+	void RunGA(std::string assetsDir, std::string fontsDir, std::string texturesDir, double dt, float speedup, bool steadyState, int generations, int populationSize, int crossover, float pCross, float pMut);
 
 private:
 	SDL_Window* mSDL_Window;
 	SDL_Event mSDL_Event;
 	SDL_Renderer* mSDL_Renderer;
-
+	Ship* enemyShip;
 	TextureManager* mTextureManager;
 
 	// Box2d
@@ -60,7 +67,7 @@ private:
 
 	// GA
 	GAPopulation* mGaPop;
-	MyGA2* mGA;
+	GAGeneticAlgorithm* mGA;
 
 	// Graphics
 	SDL_Wrapper::Texture* mBackground;

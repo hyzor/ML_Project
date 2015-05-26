@@ -3,6 +3,10 @@
 #include "MyGA.h"
 #include "MyGA2.h"
 
+#include <sstream>
+#include <iostream>
+#include <fstream>
+
 Game::Game()
 {
 	mB2VelIterations = 6;
@@ -46,7 +50,7 @@ Game::~Game()
 	//TextureManager::Destroy();
 }
 
-bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texturesDir, double dt_fixed)
+bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texturesDir)
 {
 	// World
 	mWorld = World::GetInstance();
@@ -54,7 +58,7 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 
 	mBackground = mTextureManager->LoadTexture(mAssetsDir + "Background_stars_800x600.png");
 
-	Ship* enemyShip = mWorld->SpawnEntity<Ship>(mScreenWidth - (48/2), mScreenHeight - (64/2), 48,
+	enemyShip = mWorld->SpawnEntity<Ship>(mScreenWidth - (48 / 2), mScreenHeight - (64 / 2), 48,
 		64, 5, 1, 0.0f, false, mTextureManager->LoadTexture("Ship.png"));
 	enemyShip->Init(Ship::Type::STATIONARY);
 	enemyShip->Init_b2(mWorld->Getb2World(), false, Entity::Type::SHIP, 0.0f);
@@ -62,11 +66,17 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	Entity* obstacle = mWorld->SpawnEntity<Entity>(mScreenWidth *0.25f, mScreenHeight *0.25f, 64, 64, 1, 2, 0.0f, true, mTextureManager->LoadTexture("Obstacle.png"));
 	obstacle->Init_b2(mWorld->Getb2World(), false, Entity::Type::STATIC);
 
-	obstacle = mWorld->SpawnEntity<Entity>(mScreenWidth *0.5f , mScreenHeight *0.5f, 64, 64, 1, 2, 0.0f, true, mTextureManager->LoadTexture("Obstacle.png"));
+	obstacle = mWorld->SpawnEntity<Entity>(mScreenWidth *0.5f, mScreenHeight *0.5f, 64, 64, 1, 2, 0.0f, true, mTextureManager->LoadTexture("Obstacle.png"));
 	obstacle->Init_b2(mWorld->Getb2World(), false, Entity::Type::STATIC);
 
 	obstacle = mWorld->SpawnEntity<Entity>(mScreenWidth *0.75f, mScreenHeight *0.75f, 64, 64, 1, 2, 0.0f, true, mTextureManager->LoadTexture("Obstacle.png"));
 	obstacle->Init_b2(mWorld->Getb2World(), false, Entity::Type::STATIC);
+
+	return true;
+}
+
+void Game::RunGA(std::string assetsDir, std::string fontsDir, std::string texturesDir, double dt_fixed, float speedup, bool steadyState, int generations, int populationSize, int crossover, float pCross, float pMut)
+{
 
 	GARealAlleleSetArray setArray;
 	setArray.add(0.0f, mScreenWidth);
@@ -86,7 +96,7 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 
 	mGaPop->initialize();
 
-	int popSize = 50;
+	int popSize = populationSize;
 
 	MyGenome* myGenome1;
 		for (int i = 0; i < popSize; i++){
@@ -100,24 +110,43 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 		myGenome->initialize();
 	}
 
-	// GA
-	//mGA = new MyGA(*mGaPop);
-	mGA = new MyGA2(*mGaPop);
-	mGA->crossover(MyGenome::OnePointCrossover);
-	mGA->nGenerations(2);
-	mGA->pMutation(0.15f);
-	mGA->pCrossover(0.95f);
+	if (steadyState){
+		mGA = new MyGA(*mGaPop);
+		if (crossover == Crossover::ONEPOINT)
+			((MyGA*)mGA)->crossover(MyGenome::OnePointCrossover);
+		if (crossover == Crossover::TWOPOINT)
+			((MyGA*)mGA)->crossover(MyGenome::TwoPointCrossover);
+
+
+	}
+	else{
+
+		mGA = new MyGA2(*mGaPop);
+		if (crossover == Crossover::ONEPOINT)
+			((MyGA2*)mGA)->crossover(MyGenome::OnePointCrossover);
+		if (crossover == Crossover::TWOPOINT)
+			((MyGA2*)mGA)->crossover(MyGenome::TwoPointCrossover);
+
+	}
+	mGA->nGenerations(generations);
+	mGA->pMutation(pMut);
+	mGA->pCrossover(pCross);
 	mGA->scoreFilename("GA_score.dat");
 	mGA->scoreFrequency(1);
 	mGA->flushFrequency(1);
 	mGA->selectScores(GAStatistics::AllScores);
 	mGA->recordDiversity(gaTrue);
+
+	if (steadyState){
+		((MyGA*)mGA)->Init(this, enemyShip);
+		((MyGA*)mGA)->nReplacement(popSize - 1); // if GASteadyStateGA
+	}
+	else{
+		((MyGA2*)mGA)->Init(this, enemyShip);
+		((MyGA2*)mGA)->elitist(gaTrue); // if GASimpleGA
+
+		}
 	
-	mGA->Init(this, enemyShip);
-
-	mGA->elitist(gaTrue); // if GASimpleGA
-	//mGA->nReplacement(popSize - 1); // if GASteadyStateGA
-
 	std::cout << "Initial genomes:\n";
 	for (int i = 0; i < mGA->populationSize(); ++i)
 	{
@@ -148,12 +177,14 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	testGenome->Setb2BodyType(b2_dynamicBody);
 	testGenome->SetCollisionEnabled(true);
 	
-	float speedup = 10.0f;
 
 	// Evolve by explicitly calling the GA step function
 	while (!mGA->done())
 	{
-		mGA->step(dt_fixed, speedup);
+		if (steadyState)
+			((MyGA*)mGA)->step(dt_fixed, speedup);
+		else
+			((MyGA2*)mGA)->step(dt_fixed, speedup);
 	}
 
 	std::cout << "\n-----------------------\n\n";
@@ -172,6 +203,7 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 		std::cout << " Score: " << genome->score() << "\n";
 	}
 
+
 	std::cout << "\n";
 
 	// Dump the results of the GA to the screen.
@@ -185,10 +217,45 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	std::cout << "The best individual is genome " << genome->GetID() << "\n";
 	std::cout << "Best of generation data is in file '" << mGA->scoreFilename() << "'\n";
 
+
+	std::stringstream sstm;
+	sstm << "results-" << mGA->nGenerations() << "-gen-" << mGA->populationSize() << "-popsize-"<< "-pMut-" << pMut << "-pCross-" << pCross <<  ".txt";
+	std::string str = sstm.str();
+	const char * c = str.c_str();
+
+	std::ofstream file(c);
+
+
+
 	// Dump statistics
+	file << mGA->statistics() << "\n";
+	file << "Best genome: ";
+
+	for (int i = 0; i < genome->length()-1; ++i)
+	{
+		file << genome->gene(i) << ", ";
+	}
+	file << genome->gene(genome->length());
+	file.close();
+
+
+
 	std::cout << mGA->statistics() << "\n";
 
-	return true;
+
+
+	if (mGaPop)
+	{
+		mGaPop->destroy();
+		delete mGaPop;
+		mGaPop = nullptr;
+	}
+
+	if (mGA)
+	{
+		delete mGA;
+		mGA = nullptr;
+	}
 }
 
 void Game::UpdateWorld(float dt)
@@ -234,10 +301,6 @@ void Game::Reset()
 
 }
 
-void Game::RunGA(float dt)
-{
-
-}
 
 void Game::DoPhysicsStep(float dt, int b2VelIterations, int b2PosIterations)
 {

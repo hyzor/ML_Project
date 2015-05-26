@@ -157,8 +157,8 @@ double MyGA::ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::s
 		//frametime = std::chrono::duration_cast<std::chrono::milliseconds>(frame_diff).count();
 		frametime *= (double)speedup;
 
-		if (frametime > 0.5)
-			frametime = 0.5;
+		if (frametime > 1.0)
+			frametime = 1.0;
 
 		time_now = time_new;
 		

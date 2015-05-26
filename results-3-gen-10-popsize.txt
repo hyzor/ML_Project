@@ -1,0 +1,32 @@
+3	# current generation
+0	# current convergence
+30	# number of selections since initialization
+30	# number of crossovers since initialization
+30	# number of mutations since initialization
+30	# number of replacements since initialization
+30	# number of genome evaluations since initialization
+2	# number of population evaluations since initialization
+2.61	# maximum score since initialization
+0	# minimum score since initialization
+0.84	# average of all scores ('on-line' performance)
+2.61	# average of maximum scores ('off-line' performance)
+0	# average of minimum scores ('off-line' performance)
+
+0	# mean score in initial population
+0	# maximum score in initial population
+0	# minimum score in initial population
+0	# standard deviation of initial population
+-1	# diversity of initial population (0=identical,-1=unset)
+
+0.983	# mean score in current population
+2.61	# maximum score in current population
+0	# minimum score in current population
+1.22045	# standard deviation of current population
+0.820202	# diversity of current population (0=identical,-1=unset)
+
+20	# how far back to look for convergence
+1	# how often to record scores
+1	# how often to write scores to file
+GA_score.dat	# name of file to which scores are written
+
+Best genome: 561.007, 308.726, 484.963, 431.408, 263.297, 507.525, 212.329, 461.915, 377.033, 123.346, -4.22017e+037

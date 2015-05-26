@@ -21,6 +21,7 @@ class MyGA : public GASteadyStateGA
 {
 public:
 
+
 	MyGA(const GAGenome& genome);
 	MyGA(const GAPopulation& pop);
 	virtual ~MyGA() {}
