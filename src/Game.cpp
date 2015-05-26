@@ -26,13 +26,6 @@ Game::Game(SDL_Window* sdlWindow, SDL_Renderer* sdlRenderer, unsigned int screen
 
 Game::~Game()
 {
-	if (mDebugText)
-	{
-		mDebugText->Free();
-		delete mDebugText;
-		mDebugText = nullptr;
-	}
-
 	if (mGaPop)
 	{
 		mGaPop->destroy();
@@ -55,16 +48,11 @@ Game::~Game()
 
 bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texturesDir, double dt_fixed)
 {
-	mDebugText = new SDL_Wrapper::Texture();
-
 	// World
 	mWorld = World::GetInstance();
 	mWorld->Init(mB2World, mScreenWidth, mScreenHeight);
 
 	mBackground = mTextureManager->LoadTexture(mAssetsDir + "Background_stars_800x600.png");
-
-	//mPlayerShip = mWorld->SpawnEntity<Ship>(mScreenWidth/2, mScreenHeight/2, 48,
-		//64, 5, 1, 0.0f, false, mTextureManager->LoadTexture("Ship.png"));
 
 	Ship* enemyShip = mWorld->SpawnEntity<Ship>(mScreenWidth - (48/2), mScreenHeight - (64/2), 48,
 		64, 5, 1, 0.0f, false, mTextureManager->LoadTexture("Ship.png"));
@@ -73,21 +61,12 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 
 	Entity* obstacle = mWorld->SpawnEntity<Entity>(mScreenWidth *0.25f, mScreenHeight *0.25f, 64, 64, 1, 2, 0.0f, true, mTextureManager->LoadTexture("Obstacle.png"));
 	obstacle->Init_b2(mWorld->Getb2World(), false, Entity::Type::STATIC);
-	//enemyShip->SetType(Entity::Type::SHIP);
 
 	obstacle = mWorld->SpawnEntity<Entity>(mScreenWidth *0.5f , mScreenHeight *0.5f, 64, 64, 1, 2, 0.0f, true, mTextureManager->LoadTexture("Obstacle.png"));
 	obstacle->Init_b2(mWorld->Getb2World(), false, Entity::Type::STATIC);
 
 	obstacle = mWorld->SpawnEntity<Entity>(mScreenWidth *0.75f, mScreenHeight *0.75f, 64, 64, 1, 2, 0.0f, true, mTextureManager->LoadTexture("Obstacle.png"));
 	obstacle->Init_b2(mWorld->Getb2World(), false, Entity::Type::STATIC);
-
-	/*
-	Ship* enemyShip2 = mWorld->SpawnEntity<Ship>(mScreenWidth/2, mScreenHeight/2, 48,
-		64, 5, 1, 0.0f, false, mTextureManager->LoadTexture("Ship.png"));
-	enemyShip2->Init(Ship::Type::NON_STATIONARY);
-
-	enemyShip->SetTarget(enemyShip2->GetPosition(true));
-	*/
 
 	GARealAlleleSetArray setArray;
 	setArray.add(0.0f, mScreenWidth);
@@ -102,26 +81,8 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	setArray.add(0.0f, mScreenHeight);
 	setArray.add(0.1f, 0.9f);
 
-	/*
-	setArray.add(0.0f, mScreenWidth);
-	setArray.add(0.0f, mScreenHeight);
-	setArray.add(0.0f, mScreenWidth);
-	setArray.add(0.0f, mScreenHeight);
-	setArray.add(0.0f, mScreenWidth);
-	setArray.add(0.0f, mScreenHeight);
-	setArray.add(0.0f, mScreenWidth);
-	setArray.add(0.0f, mScreenHeight);
-	setArray.add(0.0f, mScreenWidth);
-	setArray.add(0.0f, mScreenHeight);
-	setArray.add(0.0f, mScreenWidth);
-	setArray.add(0.0f, mScreenHeight);
-	setArray.add(0.0f, mScreenWidth);
-	setArray.add(0.0f, mScreenHeight);
-	*/
-
 	// GA population
 	mGaPop = new GAPopulation();
-	//mWorld->AddEntity(enemyShip);
 
 	mGaPop->initialize();
 
@@ -132,8 +93,6 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 			myGenome1 = new MyGenome(1, setArray, 48.0f*0.5f, 64.0f*0.5f, 48, 64, 5, 1, 0.0f, mTextureManager->LoadTexture("Ship.png"), MyGenome::Evaluate);
 			mGaPop->add(myGenome1);
 		}
-	//mWorld->AddEntity(mGaPop->individual())
-	//mWorld->AddEntity(myGenome);
 
 	for (int i = 0; i < mGaPop->size(); ++i)
 	{
@@ -145,7 +104,7 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	//mGA = new MyGA(*mGaPop);
 	mGA = new MyGA2(*mGaPop);
 	mGA->crossover(MyGenome::OnePointCrossover);
-	mGA->nGenerations(50);
+	mGA->nGenerations(2);
 	mGA->pMutation(0.15f);
 	mGA->pCrossover(0.95f);
 	mGA->scoreFilename("GA_score.dat");
@@ -156,16 +115,13 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	
 	mGA->Init(this, enemyShip);
 
-	mGA->elitist(); // if GASimpleGA
+	mGA->elitist(gaTrue); // if GASimpleGA
 	//mGA->nReplacement(popSize - 1); // if GASteadyStateGA
-
-	
 
 	std::cout << "Initial genomes:\n";
 	for (int i = 0; i < mGA->populationSize(); ++i)
 	{
 		MyGenome* genome = (MyGenome*)&mGA->population().individual(i);
-		//((Ship*)genome)->Init_b2(mWorld->Getb2World(), false, Entity::Type::SHIP);
 
 		MyGenome::Init(*genome);
 		genome->Init_b2(GetWorld()->Getb2World(), false, Entity::Type::SHIP, genome->gene(genome->length()-1));
@@ -191,49 +147,6 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 
 	testGenome->Setb2BodyType(b2_dynamicBody);
 	testGenome->SetCollisionEnabled(true);
-	/*
-	testGenome->ClearWaypoints();
-	testGenome->AddWaypoint(b2Vec2(200.0f*Box2dHelper::Units, 500.0f*Box2dHelper::Units));
-	testGenome->AddWaypoint(b2Vec2(600.0f*Box2dHelper::Units, 480.0f*Box2dHelper::Units));
-	testGenome->AddWaypoint(b2Vec2(600.0f*Box2dHelper::Units, 200.0f*Box2dHelper::Units));
-	testGenome->AddWaypoint(b2Vec2(200.0f*Box2dHelper::Units, 200.0f*Box2dHelper::Units));
-	*/
-
-	/*
-	testGenome->ClearWaypoints();
-	testGenome->AddWaypoint(b2Vec2(789.99*Box2dHelper::Units, 361.261*Box2dHelper::Units));
-	testGenome->AddWaypoint(b2Vec2(443.48*Box2dHelper::Units, 347.585*Box2dHelper::Units));
-	testGenome->AddWaypoint(b2Vec2(755.339*Box2dHelper::Units, 101.808*Box2dHelper::Units));
-	testGenome->AddWaypoint(b2Vec2(702.99*Box2dHelper::Units, 148.048*Box2dHelper::Units));
-	testGenome->AddWaypoint(b2Vec2(426.601*Box2dHelper::Units, 187.851*Box2dHelper::Units));
-	testGenome->Init_b2(mWorld->Getb2World(), false, Entity::Type::SHIP, 0.1);
-	auto currentTime = std::chrono::system_clock::now();
-
-	float dt_test = 1.0f / 60.0f;
-	double score = mGA->ObjectiveFunction(testGenome, dt_fixed, std::chrono::system_clock::now(), 10.0f);
-	std::cout << "Score: " << score << " dt: " << dt_fixed << "\n";
-	*/
-
-
-	/*
-	MyGenome::Init(*testGenome);
-	testGenome->Reset();
-	((Ship*)testGenome)->Reset();
-
-	testGenome->Setb2BodyType(b2_dynamicBody);
-	testGenome->SetCollisionEnabled(true);
-	
-	testGenome->ClearWaypoints();
-	
-	
-
-	dt_test = 1.0f / 60.0f;
-	score = mGA->ObjectiveFunction(testGenome, dt_fixed, std::chrono::system_clock::now(), 10.0f);
-	std::cout << "Score: " << score << " dt: " << dt_fixed << "\n";
-
-	testGenome->Setb2BodyType(b2_staticBody);
-	testGenome->SetCollisionEnabled(false);
-	*/
 	
 	float speedup = 10.0f;
 
@@ -241,8 +154,6 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	while (!mGA->done())
 	{
 		mGA->step(dt_fixed, speedup);
-		//Update(dt);
-		//Draw();
 	}
 
 	std::cout << "\n-----------------------\n\n";
@@ -282,13 +193,7 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 
 void Game::UpdateWorld(float dt)
 {
-	//mB2World->Step(dt, mB2VelIterations, mB2PosIterations);
-	//DoPhysicsStep(dt, mB2VelIterations, mB2PosIterations);
-
 	mWorld->Update(dt);
-
-	//if (!mPlayerShip->IsAlive())
-		//mPlayerShip = nullptr;
 }
 
 void Game::Draw(double alpha)
@@ -301,64 +206,6 @@ void Game::Draw(double alpha)
 	mWorld->Draw(mSDL_Renderer, alpha);
 
 	//mB2World->DrawDebugData();
-
-	// DEBUG
-	/*
-	if (mDebugText->CreateFromText("Angle (Deg): " + std::to_string(fmod(GetPlayerShip()->GetAngle(false), 360.0f)), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
-	{
-		mDebugText->Render(0, 0, mSDL_Renderer);
-	}
-
-	if (mDebugText->CreateFromText("PosX (px): " + std::to_string(GetPlayerShip()->GetPosition(false).x), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
-	{
-		mDebugText->Render(0, 20, mSDL_Renderer);
-	}
-
-	if (mDebugText->CreateFromText("PosY (px): " + std::to_string(GetPlayerShip()->GetPosition(false).y), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
-	{
-		mDebugText->Render(0, 40, mSDL_Renderer);
-	}
-
-	if (mDebugText->CreateFromText("PosX (m): " + std::to_string(GetPlayerShip()->GetPosition(true).x), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
-	{
-		mDebugText->Render(0, 60, mSDL_Renderer);
-	}
-
-	if (mDebugText->CreateFromText("PosY (m): " + std::to_string(GetPlayerShip()->GetPosition(true).y), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
-	{
-		mDebugText->Render(0, 80, mSDL_Renderer);
-	}
-
-	if (mDebugText->CreateFromText("VelX: " + std::to_string(GetPlayerShip()->GetLinearVelocity().x), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
-	{
-		mDebugText->Render(0, 100, mSDL_Renderer);
-	}
-
-	if (mDebugText->CreateFromText("VelY: " + std::to_string(GetPlayerShip()->GetLinearVelocity().y), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
-	{
-		mDebugText->Render(0, 120, mSDL_Renderer);
-	}
-
-	if (mDebugText->CreateFromText("WaypointX (m): " + std::to_string(GetPlayerShip()->GetCurrentWaypoint().x), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
-	{
-		mDebugText->Render(0, 140, mSDL_Renderer);
-	}
-
-	if (mDebugText->CreateFromText("WaypointY (m): " + std::to_string(GetPlayerShip()->GetCurrentWaypoint().y), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
-	{
-		mDebugText->Render(0, 160, mSDL_Renderer);
-	}
-
-	if (mDebugText->CreateFromText("WaypointX (px): " + std::to_string(GetPlayerShip()->GetCurrentWaypoint().x*Box2dHelper::PixelsPerMeter), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
-	{
-		mDebugText->Render(0, 180, mSDL_Renderer);
-	}
-
-	if (mDebugText->CreateFromText("WaypointY (px): " + std::to_string(GetPlayerShip()->GetCurrentWaypoint().y*Box2dHelper::PixelsPerMeter), { 255, 255, 255 }, mMainFont, mSDL_Renderer))
-	{
-		mDebugText->Render(0, 200, mSDL_Renderer);
-	}
-	*/
 
 	SDL_RenderPresent(mSDL_Renderer);
 }

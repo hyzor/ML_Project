@@ -76,6 +76,13 @@
     <IntDir>$(SolutionDir)build\$(PlatformTarget)\$(Configuration)\</IntDir>
     <ReferencePath>$(VC_ReferencesPath_x86);$(ProjectDir)</ReferencePath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)bin\$(PlatformTarget)\</OutDir>
+    <IntDir>$(SolutionDir)build\$(PlatformTarget)\$(Configuration)\</IntDir>
+    <IncludePath>External\include;$(IncludePath)</IncludePath>
+    <ReferencePath>$(VC_ReferencesPath_x86);$(ProjectDir)</ReferencePath>
+    <LibraryPath>External\lib\x86;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -86,7 +93,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>ga_d.lib;SDL2.lib;SDL2main.lib;Box2D_d.lib;SDL2_image.lib;SDL2_ttf.lib;SDL2_gfx_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
-      <AdditionalOptions>/FORCE:MULTIPLE %(AdditionalOptions)</AdditionalOptions>
+      <ShowProgress>NotSet</ShowProgress>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /d /y "$(ProjectDir)External\Lib\x86\dll_d\*.*" "$(OutDir)"</Command>
@@ -104,7 +111,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>ga.lib;SDL2.lib;SDL2main.lib;Box2D.lib;SDL2_image.lib;SDL2_ttf.lib;SDL2_gfx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /d /y "$(ProjectDir)External\Lib\x86\dll\*.*" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

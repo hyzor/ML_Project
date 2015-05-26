@@ -43,7 +43,6 @@ public:
 	void RunGA(float dt);
 
 private:
-
 	SDL_Window* mSDL_Window;
 	SDL_Event mSDL_Event;
 	SDL_Renderer* mSDL_Renderer;
@@ -65,7 +64,6 @@ private:
 
 	// Graphics
 	SDL_Wrapper::Texture* mBackground;
-	SDL_Wrapper::Texture* mDebugText;
 	TTF_Font* mMainFont;
 
 	Ship* mPlayerShip;

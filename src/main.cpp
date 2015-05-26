@@ -11,7 +11,7 @@ of a continuous function in two variables.  This program uses a binary-to-
 decimal genome.
 */
 
-#define INSTANTIATE_REAL_GENOME true
+//#define INSTANTIATE_REAL_GENOME true
 
 #include <stdio.h>
 #include <iostream>
@@ -39,12 +39,6 @@ decimal genome.
 
 #include "Game.h"
 
-/*
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-*/
-
 // Directories
 static const std::string dir_assets = "assets/";
 static const std::string dir_fonts = dir_assets + "fonts/";
@@ -53,25 +47,6 @@ static const std::string dir_textures = dir_assets;
 // Window
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
-
-// GA defines
-#define PROB_MUTATION 0.01
-#define PROB_CROSSOVER 1.0
-#define NUM_GENERATIONS 100
-#define POPULATION_SIZE 30
-#define FREQ_SCORE 10
-#define FREQ_FLUSH 50
-#define FILENAME_SCORE "GA_score.dat"
-
-// Entity attributes
-#define ENTITY_INIT_HP 5
-#define ENTITY_INIT_DMG 1
-#define ENTITY_INIT_SHOOTFREQ 0.1
-#define ENTITY_INIT_WIDTH 48
-#define ENTITY_INIT_HEIGHT 64
-
-//int MyCrossoverFunc(const GAGenome& genome1, const GAGenome& genome2, GAGenome* result);
-//float MyObjectiveFunc(GAPopulation& pop);
 
 int main(int argc, char **argv)
 {
@@ -291,38 +266,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-
-/*
-int MyCrossoverFunc(const GAGenome& genome1, const GAGenome& genome2, GAGenome* result, GAGenome* result2)
-{
-	MyGenome myGenome1 = (MyGenome&)genome1;
-	MyGenome myGenome2 = (MyGenome&)genome2;
-
-	myGenome1.cr
-
-	return 1;
-}
-*/
-
-/*
-float MyObjectiveFunc(GAGenome& genome, GAPopulation& pop)
-{
-	MyGenome* myGenome = static_cast<MyGenome*>(&c);
-	float score = 0.0f;
-
-	for (int i = 0; i < pop.size(); ++i)
-	{
-		MyGenome* genome = static_cast<MyGenome*>(&pop.individual(i));
-
-		if (matches[myGenome->GetID()][i] == false)
-		{
-			if (myGenome->GetID() > genome->GetID())
-			{
-				score += 1.0f;
-			}
-		}
-	}
-
-	return score;
-}
-*/
