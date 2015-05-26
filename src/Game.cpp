@@ -225,24 +225,17 @@ void Game::RunGA(std::string assetsDir, std::string fontsDir, std::string textur
 
 	std::ofstream file(c);
 
-
-
 	// Dump statistics
 	file << mGA->statistics() << "\n";
 	file << "Best genome: ";
 
-	for (int i = 0; i < genome->length()-1; ++i)
+	for (int i = 0; i < genome->length(); ++i)
 	{
 		file << genome->gene(i) << ", ";
 	}
-	file << genome->gene(genome->length());
 	file.close();
 
-
-
 	std::cout << mGA->statistics() << "\n";
-
-
 
 	if (mGaPop)
 	{
