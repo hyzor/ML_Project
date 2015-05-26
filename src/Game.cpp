@@ -1,6 +1,7 @@
 #include "Game.h"
 
 #include "MyGA.h"
+#include "MyGA2.h"
 
 Game::Game()
 {
@@ -70,14 +71,14 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	enemyShip->Init(Ship::Type::STATIONARY);
 	enemyShip->Init_b2(mWorld->Getb2World(), false, Entity::Type::SHIP, 0.0f);
 
-	Entity* obstacle = mWorld->SpawnEntity<Entity>(mScreenWidth / 2, mScreenHeight / 2, 64, 64, 1, 2, 0.0f, true, mTextureManager->LoadTexture("Obstacle.png"));
+	Entity* obstacle = mWorld->SpawnEntity<Entity>(mScreenWidth *0.25f, mScreenHeight *0.25f, 64, 64, 1, 2, 0.0f, true, mTextureManager->LoadTexture("Obstacle.png"));
 	obstacle->Init_b2(mWorld->Getb2World(), false, Entity::Type::STATIC);
 	//enemyShip->SetType(Entity::Type::SHIP);
 
-	obstacle = mWorld->SpawnEntity<Entity>(mScreenWidth / 4, mScreenHeight / 4, 64, 64, 1, 2, 0.0f, true, mTextureManager->LoadTexture("Obstacle.png"));
+	obstacle = mWorld->SpawnEntity<Entity>(mScreenWidth *0.5f , mScreenHeight *0.5f, 64, 64, 1, 2, 0.0f, true, mTextureManager->LoadTexture("Obstacle.png"));
 	obstacle->Init_b2(mWorld->Getb2World(), false, Entity::Type::STATIC);
 
-	obstacle = mWorld->SpawnEntity<Entity>((int)((float)mScreenWidth / 1.25f), (int)((float)mScreenHeight / 1.25f), 64, 64, 1, 2, 0.0f, true, mTextureManager->LoadTexture("Obstacle.png"));
+	obstacle = mWorld->SpawnEntity<Entity>(mScreenWidth *0.75f, mScreenHeight *0.75f, 64, 64, 1, 2, 0.0f, true, mTextureManager->LoadTexture("Obstacle.png"));
 	obstacle->Init_b2(mWorld->Getb2World(), false, Entity::Type::STATIC);
 
 	/*
@@ -97,11 +98,11 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	setArray.add(0.0f, mScreenHeight);
 	setArray.add(0.0f, mScreenWidth);
 	setArray.add(0.0f, mScreenHeight);
-
-	setArray.add(0.1f, 0.9f);
-	/*
 	setArray.add(0.0f, mScreenWidth);
 	setArray.add(0.0f, mScreenHeight);
+	setArray.add(0.1f, 0.9f);
+
+	/*
 	setArray.add(0.0f, mScreenWidth);
 	setArray.add(0.0f, mScreenHeight);
 	setArray.add(0.0f, mScreenWidth);
@@ -124,8 +125,10 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 
 	mGaPop->initialize();
 
+	int popSize = 50;
+
 	MyGenome* myGenome1;
-		for (int i = 0; i < 10; i++){
+		for (int i = 0; i < popSize; i++){
 			myGenome1 = new MyGenome(1, setArray, 48.0f*0.5f, 64.0f*0.5f, 48, 64, 5, 1, 0.0f, mTextureManager->LoadTexture("Ship.png"), MyGenome::Evaluate);
 			mGaPop->add(myGenome1);
 		}
@@ -139,9 +142,10 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	}
 
 	// GA
-	mGA = new MyGA(*mGaPop);
+	//mGA = new MyGA(*mGaPop);
+	mGA = new MyGA2(*mGaPop);
 	mGA->crossover(MyGenome::OnePointCrossover);
-	mGA->nGenerations(5);
+	mGA->nGenerations(50);
 	mGA->pMutation(0.15f);
 	mGA->pCrossover(0.95f);
 	mGA->scoreFilename("GA_score.dat");
@@ -149,7 +153,13 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	mGA->flushFrequency(1);
 	mGA->selectScores(GAStatistics::AllScores);
 	mGA->recordDiversity(gaTrue);
+	
 	mGA->Init(this, enemyShip);
+
+	mGA->elitist(); // if GASimpleGA
+	//mGA->nReplacement(popSize - 1); // if GASteadyStateGA
+
+	
 
 	std::cout << "Initial genomes:\n";
 	for (int i = 0; i < mGA->populationSize(); ++i)
@@ -181,39 +191,50 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 
 	testGenome->Setb2BodyType(b2_dynamicBody);
 	testGenome->SetCollisionEnabled(true);
-
+	/*
 	testGenome->ClearWaypoints();
 	testGenome->AddWaypoint(b2Vec2(200.0f*Box2dHelper::Units, 500.0f*Box2dHelper::Units));
 	testGenome->AddWaypoint(b2Vec2(600.0f*Box2dHelper::Units, 480.0f*Box2dHelper::Units));
 	testGenome->AddWaypoint(b2Vec2(600.0f*Box2dHelper::Units, 200.0f*Box2dHelper::Units));
 	testGenome->AddWaypoint(b2Vec2(200.0f*Box2dHelper::Units, 200.0f*Box2dHelper::Units));
+	*/
 
+	/*
+	testGenome->ClearWaypoints();
+	testGenome->AddWaypoint(b2Vec2(789.99*Box2dHelper::Units, 361.261*Box2dHelper::Units));
+	testGenome->AddWaypoint(b2Vec2(443.48*Box2dHelper::Units, 347.585*Box2dHelper::Units));
+	testGenome->AddWaypoint(b2Vec2(755.339*Box2dHelper::Units, 101.808*Box2dHelper::Units));
+	testGenome->AddWaypoint(b2Vec2(702.99*Box2dHelper::Units, 148.048*Box2dHelper::Units));
+	testGenome->AddWaypoint(b2Vec2(426.601*Box2dHelper::Units, 187.851*Box2dHelper::Units));
+	testGenome->Init_b2(mWorld->Getb2World(), false, Entity::Type::SHIP, 0.1);
 	auto currentTime = std::chrono::system_clock::now();
 
-	//float dt_test = 1.0f / 60.0f;
-	//double score = mGA->ObjectiveFunction(testGenome, dt_fixed, std::chrono::system_clock::now(), 2.0f);
-	//std::cout << "Score: " << score << " dt: " << dt_fixed << "\n";
+	float dt_test = 1.0f / 60.0f;
+	double score = mGA->ObjectiveFunction(testGenome, dt_fixed, std::chrono::system_clock::now(), 10.0f);
+	std::cout << "Score: " << score << " dt: " << dt_fixed << "\n";
+	*/
 
+
+	/*
 	MyGenome::Init(*testGenome);
 	testGenome->Reset();
 	((Ship*)testGenome)->Reset();
 
 	testGenome->Setb2BodyType(b2_dynamicBody);
 	testGenome->SetCollisionEnabled(true);
-
+	
 	testGenome->ClearWaypoints();
-	testGenome->AddWaypoint(b2Vec2(200.0f*Box2dHelper::Units, 500.0f*Box2dHelper::Units));
-	testGenome->AddWaypoint(b2Vec2(640.0f*Box2dHelper::Units, 480.0f*Box2dHelper::Units));
-	testGenome->AddWaypoint(b2Vec2(600.0f*Box2dHelper::Units, 200.0f*Box2dHelper::Units));
-	testGenome->AddWaypoint(b2Vec2(200.0f*Box2dHelper::Units, 200.0f*Box2dHelper::Units));
+	
+	
 
-	//dt_test = 1.0f / 30.0f;
-	//score = mGA->ObjectiveFunction(testGenome, dt_fixed, std::chrono::system_clock::now(), 10.0f);
-	//std::cout << "Score: " << score << " dt: " << dt_fixed << "\n";
+	dt_test = 1.0f / 60.0f;
+	score = mGA->ObjectiveFunction(testGenome, dt_fixed, std::chrono::system_clock::now(), 10.0f);
+	std::cout << "Score: " << score << " dt: " << dt_fixed << "\n";
 
 	testGenome->Setb2BodyType(b2_staticBody);
 	testGenome->SetCollisionEnabled(false);
-
+	*/
+	
 	float speedup = 10.0f;
 
 	// Evolve by explicitly calling the GA step function

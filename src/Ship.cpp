@@ -27,6 +27,7 @@ void Ship::Update(float dt)
 
 		Entity::Update(dt);
 
+
 		if (mCurCooldown > 0.0f)
 			mCurCooldown -= dt;
 
@@ -634,7 +635,7 @@ void Ship::Reset()
 	Entity::Reset();
 
 	mCurCooldown = 0.0f;
-
+	mDoProcessWaypoints = true;
 	for (int i = 0; i < Events::NUM_EVENTS; ++i)
 	{
 		mEventTriggers[i] = false;

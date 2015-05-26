@@ -18,7 +18,7 @@
 #include "Common.h"
 
 class MyGA;
-
+class MyGA2;
 class Game
 {
 public:
@@ -61,7 +61,7 @@ private:
 
 	// GA
 	GAPopulation* mGaPop;
-	MyGA* mGA;
+	MyGA2* mGA;
 
 	// Graphics
 	SDL_Wrapper::Texture* mBackground;

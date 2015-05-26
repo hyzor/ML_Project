@@ -278,7 +278,7 @@ bool Entity::Init_b2(b2World* world, bool isBullet, unsigned int type)
 		fixtureDef.shape = &dynamicBox;
 		fixtureDef.density = 1.0f;
 		fixtureDef.friction = 0.0f;
-		fixtureDef.restitution = 0.15f;
+		fixtureDef.restitution = 0.5f;
 
 		mType = type;
 		fixtureDef.filter.categoryBits = type;
