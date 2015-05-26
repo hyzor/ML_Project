@@ -156,102 +156,24 @@ int main(int argc, char **argv)
 	box2Dworld->SetContactListener(contactListener);
 
 	Game* game = new Game(window, renderer, WINDOW_WIDTH, WINDOW_HEIGHT, box2Dworld, textureManager, font);
-	game->Init(dir_assets, dir_fonts, dir_textures, dt_fixed);
+	game->Init(dir_assets, dir_fonts, dir_textures);
+
+
+	float speedup = 10.0f;
+	bool steadyState = true;
+	int generations = 3;
+	int populationSize = 10;
+	int crossover = game->ONEPOINT;
+	float pMutate = 0.15f;
+	float pCrossover = 0.95f;
+	
+	game->RunGA(dir_assets, dir_fonts, dir_textures, dt_fixed, speedup, steadyState, generations, populationSize, crossover, pMutate, pCrossover);
+	speedup = 20.0f;
+	pCrossover = 0.8f;
+	game->RunGA(dir_assets, dir_fonts, dir_textures, dt_fixed, speedup, steadyState, generations, populationSize, crossover, pMutate, pCrossover);
+
 	gameIsRunning = true;
 
-	vec2 curMouseClickPos;
-
-	while (gameIsRunning)
-	{
-		while (SDL_PollEvent(&sdlEvent) != 0)
-		{
-			if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) 
-			{
-				SDL_GetMouseState(&curMouseClickPos.x, &curMouseClickPos.y);
-			}
-
-			if (sdlEvent.type == SDL_QUIT)
-			{
-				gameIsRunning = false;
-			}
-			else if (sdlEvent.type == SDL_KEYDOWN)
-			{
-				switch (sdlEvent.key.keysym.sym)
-				{
-				case SDLK_w:
-					game->GetPlayerShip()->ActivateEventTrigger(Ship::THRUST_FORWARD, true);
-					break;
-				case SDLK_s:
-					game->GetPlayerShip()->ActivateEventTrigger(Ship::THRUST_BACKWARD, true);
-					break;
-				case SDLK_a:
-					game->GetPlayerShip()->ActivateEventTrigger(Ship::TORQUE_LEFT, true);
-					break;
-				case SDLK_d:
-					game->GetPlayerShip()->ActivateEventTrigger(Ship::TORQUE_RIGHT, true);
-					break;
-				case SDLK_r:
-					if (game->GetPlayerShip())
-						game->GetPlayerShip()->Reset();
-					break;
-				case SDLK_e:
-					game->GetPlayerShip()->ActivateEventTrigger(Ship::STRAFE_RIGHT, true);
-					break;
-				case SDLK_q:
-					game->GetPlayerShip()->ActivateEventTrigger(Ship::STRAFE_LEFT, true);
-					break;
-				case SDLK_SPACE:
-					game->GetPlayerShip()->ActivateEventTrigger(Ship::SHOOT, true);
-					break;
-				case SDLK_LSHIFT:
-					game->GetPlayerShip()->ActivateEventTrigger(Ship::STABILIZE, true);
-					break;
-				case SDLK_ESCAPE:
-					gameIsRunning = false;
-					break;
-				}
-			}
-			else if (sdlEvent.type == SDL_KEYUP)
-			{
-				switch (sdlEvent.key.keysym.sym)
-				{
-					case SDLK_w:
-						game->GetPlayerShip()->ActivateEventTrigger(Ship::THRUST_FORWARD, false);
-						break;
-					case SDLK_s:
-						game->GetPlayerShip()->ActivateEventTrigger(Ship::THRUST_BACKWARD, false);
-						break;
-					case SDLK_a:
-						game->GetPlayerShip()->ActivateEventTrigger(Ship::TORQUE_LEFT, false);
-						break;
-					case SDLK_d:
-						game->GetPlayerShip()->ActivateEventTrigger(Ship::TORQUE_RIGHT, false);
-						break;
-					case SDLK_e:
-						game->GetPlayerShip()->ActivateEventTrigger(Ship::STRAFE_RIGHT, false);
-						break;
-					case SDLK_q:
-						game->GetPlayerShip()->ActivateEventTrigger(Ship::STRAFE_LEFT, false);
-						break;
-					case SDLK_SPACE:
-						game->GetPlayerShip()->ActivateEventTrigger(Ship::SHOOT, false);
-						break;
-					case SDLK_LSHIFT:
-						game->GetPlayerShip()->ActivateEventTrigger(Ship::STABILIZE, false);
-						break;
-				}
-			}
-		}
-
-		// Update game
-		//game->Update(dt);
-
-		// Draw game
-		//game->Draw();
-
-		// Present final canvas
-		//SDL_RenderPresent(renderer);
-	}
 
 	if (game)
 	{
