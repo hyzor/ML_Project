@@ -51,7 +51,7 @@
     <ClCompile Include="src\MyB2DebugDraw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\MyGA2.cpp">
+    <ClCompile Include="src\MyGA_Simple.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -92,7 +92,7 @@
     <ClInclude Include="src\MyB2DebugDraw.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\MyGA2.h">
+    <ClInclude Include="src\MyGA_Simple.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

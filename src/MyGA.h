@@ -20,23 +20,24 @@ typedef int(*CrossoverFunc)(const GAGenome&, const GAGenome&, GAGenome*, GAGenom
 class MyGA : public GASteadyStateGA
 {
 public:
-
-
 	MyGA(const GAGenome& genome);
 	MyGA(const GAPopulation& pop);
 	virtual ~MyGA() {}
-	virtual void step(float dt_fixed, float& speedup);
+	virtual void step(float dt_fixed, float& speedup, bool doDraw);
 	//MyGA& operator++() { step(0.0f); return *this; }
 	void crossover(CrossoverFunc func);
 	void Init(Game* game, Ship* enemyShip);
 
-	double ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::system_clock::time_point& time_now, float speedup);
+	static double ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::system_clock::time_point& time_now, float speedup, Game* game, Ship* enemyShip, bool doDraw);
 
 	CrossoverFunc mCrossoverFunc;
+
+	const std::vector<float>& GetDiversities() const;
 
 protected:
 	Ship* mEnemyShip;
 	Game* mGame;
+	std::vector<float> mDiversities;
 	//CrossoverFunc mCrossoverFunc;
 };
 

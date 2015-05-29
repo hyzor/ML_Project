@@ -8,6 +8,7 @@
 // and the default GAGenome class
 class MyGenome : public Ship, public GARealGenome
 {
+public:
 	// Default genome functions/operators definitions
 public:
 	static void Init(GAGenome&);
@@ -19,9 +20,9 @@ public:
 public:
 	MyGenome(int id, GARealAlleleSetArray& setArray, float posX, float posY,
 		int width, int height, int health, int damage, float angle,
-		SDL_Wrapper::Texture* texture, GAGenome::Evaluator f = (GAGenome::Evaluator)0);
-	//MyGenome(int id, GARealAlleleSetArray& setArray);
-	//MyGenome& operator=(const GAGenome& arr);
+		SDL_Wrapper::Texture* texture, GAGenome::Evaluator f = (GAGenome::Evaluator)0, 
+		GAGenome::Mutator fMut = (GAGenome::Mutator)0);
+
 	virtual ~MyGenome();
 
 	MyGenome& operator=(const GAGenome& orig);

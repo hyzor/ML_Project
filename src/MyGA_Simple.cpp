@@ -1,16 +1,16 @@
-#include "MyGA2.h"
+#include "MyGA_Simple.h"
 
 #include "Game.h"
 
-MyGA2::MyGA2(const GAGenome& genome)
+MyGA_Simple::MyGA_Simple(const GAGenome& genome)
 	: GASimpleGA(genome)
 {}
 
-MyGA2::MyGA2(const GAPopulation& pop)
+MyGA_Simple::MyGA_Simple(const GAPopulation& pop)
 	: GASimpleGA(pop)
 {}
 
-void MyGA2::step(float dt_fixed, float& speedup)
+void MyGA_Simple::step(float dt_fixed, float& speedup, bool doDraw)
 {
 	//std::cout << "Generation " << generation() << "\n";
 
@@ -117,8 +117,8 @@ void MyGA2::step(float dt_fixed, float& speedup)
 		myGenome->Setb2BodyType(b2_dynamicBody);
 		myGenome->SetCollisionEnabled(true);
 
-		float score = ObjectiveFunction(myGenome, dt_fixed, std::chrono::system_clock::now(), speedup);
-		std::cout << "Finished generation " << generation() << " game " << i << " (Score: " << score << ")\n";
+		float score = MyGA::ObjectiveFunction(myGenome, dt_fixed, std::chrono::system_clock::now(), speedup, mGame, mEnemyShip, doDraw);
+		//std::cout << "Finished generation " << generation() << " game " << i << " (Score: " << score << ")\n";
 		myGenome->SetScore(score);
 	}
 
@@ -138,21 +138,29 @@ void MyGA2::step(float dt_fixed, float& speedup)
 	// Finally we update the stats by one generation
 	stats.update(*pop);
 
+	mDiversities.push_back(pop->div());
+
 	//std::cout << statistics() << "\n";
 }
 
-void MyGA2::crossover(CrossoverFunc func)
+void MyGA_Simple::crossover(CrossoverFunc func)
 {
 	mCrossoverFunc = func;
 }
 
-void MyGA2::Init(Game* game, Ship* enemyShip)
+void MyGA_Simple::Init(Game* game, Ship* enemyShip)
 {
 	mGame = game;
 	mEnemyShip = enemyShip;
 }
 
-double MyGA2::ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::system_clock::time_point& time_now, float speedup)
+const std::vector<float>& MyGA_Simple::GetDiversities() const
+{
+	return mDiversities;
+}
+
+/*
+double MyGA_Simple::ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::system_clock::time_point& time_now, float speedup)
 {
 	MyGenome* myGenome = (MyGenome*)genome;
 	mGame->GetWorld()->AddEntity((Ship*)myGenome);
@@ -265,3 +273,4 @@ double MyGA2::ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::
 
 	return score;
 }
+*/

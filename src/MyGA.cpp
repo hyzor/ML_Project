@@ -10,7 +10,7 @@ MyGA::MyGA(const GAPopulation& pop)
 	: GASteadyStateGA(pop)
 {}
 
-void MyGA::step(float dt_fixed, float& speedup)
+void MyGA::step(float dt_fixed, float& speedup, bool doDraw)
 {
 	//std::cout << "Generation " << generation() << "\n";
 
@@ -82,8 +82,8 @@ void MyGA::step(float dt_fixed, float& speedup)
 		myGenome->Setb2BodyType(b2_dynamicBody);
 		myGenome->SetCollisionEnabled(true);
 
-		float score = ObjectiveFunction(myGenome, dt_fixed, std::chrono::system_clock::now(), speedup);
-		std::cout << "Finished generation " << generation() << " game " << i << " (Score: " << score << ")\n";
+		float score = ObjectiveFunction(myGenome, dt_fixed, std::chrono::system_clock::now(), speedup, mGame, mEnemyShip, doDraw);
+		//std::cout << "Finished generation " << generation() << " game " << i << " (Score: " << score << ")\n";
 		myGenome->SetScore(score);
 	}
 
@@ -106,6 +106,8 @@ void MyGA::step(float dt_fixed, float& speedup)
 	// Finally we update the stats by one generation
 	stats.update(*pop);
 
+	mDiversities.push_back(pop->div());
+
 	//std::cout << statistics() << "\n";
 }
 
@@ -120,10 +122,10 @@ void MyGA::Init(Game* game, Ship* enemyShip)
 	mEnemyShip = enemyShip;
 }
 
-double MyGA::ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::system_clock::time_point& time_now, float speedup)
+double MyGA::ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::system_clock::time_point& time_now, float speedup, Game* game, Ship* enemyShip, bool doDraw)
 {
 	MyGenome* myGenome = (MyGenome*)genome;
-	mGame->GetWorld()->AddEntity((Ship*)myGenome);
+	game->GetWorld()->AddEntity((Ship*)myGenome);
 
 	SDL_Event sdlEvent;
 
@@ -143,9 +145,9 @@ double MyGA::ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::s
 
 	int physicsIterations = 0;
 
-	while (gameIsRunning && time < 25.0 && myGenome->IsAlive() && mEnemyShip->IsAlive())
+	while (gameIsRunning && time < 25.0 && myGenome->IsAlive() && enemyShip->IsAlive())
 	{
-		mGame->GetWorld()->Flush();
+		game->GetWorld()->Flush();
 
 		auto time_new = std::chrono::system_clock::now();
 		time_since_start = time_new - time_start;
@@ -180,10 +182,10 @@ double MyGA::ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::s
 
 		while (accumulator >= dt_fixed)
 		{
-			mEnemyShip->SetTarget(myGenome->GetPosition(true));
-			mGame->UpdateWorld(dt_fixed);
+			enemyShip->SetTarget(myGenome->GetPosition(true));
+			game->UpdateWorld(dt_fixed);
 
-			mGame->DoPhysicsStep(dt_fixed, Box2dHelper::b2VelIterations, Box2dHelper::b2PosIterations);
+			game->DoPhysicsStep(dt_fixed, Box2dHelper::b2VelIterations, Box2dHelper::b2PosIterations);
 			physicsIterations++;
 
 			accumulator -= dt_fixed;
@@ -191,13 +193,15 @@ double MyGA::ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::s
 
 		const double alpha = accumulator / dt_fixed;
 
-		mGame->GetWorld()->Getb2World()->ClearForces();
+		game->GetWorld()->Getb2World()->ClearForces();
 
 		//std::cout << myGenome->GetHealth() << "\n";
 		//mEnemyShip->SetPosition(b2Vec2(800 * Box2dHelper::Units, 600 * Box2dHelper::Units));
 
-		mGame->Draw(alpha);
-		mGame->DoPostProcessing();
+		if (doDraw)
+			game->Draw(alpha);
+
+		game->DoPostProcessing();
 		//mEnemyShip->RotateTo_Torque(myGenome->GetPosition(true), dt);
 
 		time += frametime;
@@ -209,13 +213,13 @@ double MyGA::ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::s
 
 	std::chrono::duration<double> frame_diff = end_time - time_start;
 
-	std::cout << "Time elapsed (s): " << frame_diff.count() << "\n";
+	//std::cout << "Time elapsed (s): " << frame_diff.count() << "\n";
 
-	std::cout << "Total frame time: " << time << "\n";
+	//std::cout << "Total frame time: " << time << "\n";
 
-	std::cout << myGenome->GetHealth() << " " << mEnemyShip->GetHealth() << "\n";
+	//std::cout << myGenome->GetHealth() << " " << enemyShip->GetHealth() << "\n";
 
-	double score = (double)(myGenome->GetHealth_Init() + myGenome->GetHealth() - mEnemyShip->GetHealth()) + ((float)iterations * 0.01f);
+	double score = (double)(myGenome->GetHealth_Init() + myGenome->GetHealth() - enemyShip->GetHealth()) + ((float)iterations * 0.01f);
 
 	if (score < 0.0)
 		score = 0.0;
@@ -224,12 +228,17 @@ double MyGA::ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::s
 
 	myGenome->SetCollisionEnabled(false);
 	((Ship*)myGenome)->Reset();
-	mEnemyShip->Reset();
+	enemyShip->Reset();
 	myGenome->Setb2BodyType(b2_staticBody);
 
-	mGame->GetWorld()->Flush();
+	game->GetWorld()->Flush();
 
-	mGame->GetWorld()->RemoveEntity((Ship*)myGenome);
+	game->GetWorld()->RemoveEntity((Ship*)myGenome);
 
 	return score;
+}
+
+const std::vector<float>& MyGA::GetDiversities() const
+{
+	return mDiversities;
 }

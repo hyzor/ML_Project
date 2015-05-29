@@ -1,6 +1,8 @@
 #ifndef GAME_H_
 #define GAME_H_
 
+
+
 #include <string>
 
 #include <ga/ga.h>
@@ -18,15 +20,23 @@
 #include "Common.h"
 
 class MyGA;
-class MyGA2;
+class MyGA_Simple;
 class Game
 {
 public:
 
 	static enum Crossover
 	{
-		ONEPOINT,
-		TWOPOINT,
+		CROSSOVER_REAL_ONEPOINT,
+		CROSSOVER_REAL_TWOPOINT,
+		CROSSOVER_REAL_BLEND
+	};
+
+	static enum MutationTypes
+	{
+		MUTATOR_REAL_SWAP,
+		MUTATOR_REAL_UNIFORM,
+		MUTATOR_REAL_GAUSSIAN
 	};
 
 	Game();
@@ -47,7 +57,11 @@ public:
 
 	void Reset();
 
-	void RunGA(std::string assetsDir, std::string fontsDir, std::string texturesDir, double dt, float speedup, bool steadyState, int generations, int populationSize, int crossover, float pCross, float pMut);
+	double RunGenomeFromGeneSet(std::vector<float>& geneSet, float dt_fixed, float speedup, bool doDraw);
+
+	void RunGA(std::string assetsDir, std::string fontsDir, std::string texturesDir,
+		double dt, float speedup, bool steadyState, int generations,
+		int populationSize, int crossover, int mutatorType, float pCross, float pMut, int iteration, bool doDraw);
 
 private:
 	SDL_Window* mSDL_Window;

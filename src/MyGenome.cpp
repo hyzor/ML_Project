@@ -2,50 +2,19 @@
 
 #include <ga/GARealGenome.C>
 
-/*
-MyGenome::MyGenome(int id, GARealAlleleSetArray& setArray, float posX, float posY, GAGenome::Evaluator f)
-	//: GAGenome(Init, Mutate, Compare)
-	: GARealGenome(setArray, f)
-{
-	//initializer(Init);
-	//evaluator(Evaluate);
-	//crossover(Cross);
-	mID = id;
-	mTotalMatchesWon = 0;
-	mCurMatchesWon = 0;
-}
-*/
-
-MyGenome::MyGenome(int id, GARealAlleleSetArray& setArray, float posX, float posY, 
+MyGenome::MyGenome(int id, GARealAlleleSetArray& setArray, float posX, float posY,
 	int width, int height, int health, int damage, float angle,
-	SDL_Wrapper::Texture* texture, GAGenome::Evaluator f /*= (GAGenome::Evaluator)0*/)
+	SDL_Wrapper::Texture* texture, GAGenome::Evaluator f /*= (GAGenome::Evaluator)0*/,
+	GAGenome::Mutator fMut /*= (GAGenome::Mutator)0*/)
 	: Ship(posX, posY, width, height, health, damage, angle, false, texture), GARealGenome(setArray, f)
 {
 	mID = id;
 	mTotalMatchesWon = 0;
 	mCurMatchesWon = 0;
 	mScore = 0.0f;
-}
 
-/*
-MyGenome::MyGenome(int id, GARealAlleleSetArray& setArray)
-	//: GAGenome(Init, Mutate, Compare)
-{
-	//evaluator(Evaluate);
-	//crossover(Cross);
-	mID = id;
-	mTotalMatchesWon = 0;
-	mCurMatchesWon = 0;
-	mAlleleSetArray = &setArray;
+	mutator(fMut);
 }
-*/
-
-/*
-MyGenome::MyGenome(const MyGenome& orig)
-{
-	copy(orig);
-}
-*/
 
 MyGenome& MyGenome::operator=(const GAGenome& orig)
 {
@@ -64,10 +33,6 @@ GAGenome* MyGenome::clone(CloneMethod) const
 	newGenome->mSdlClipRect = nullptr;
 	newGenome->mSdlCenterPoint = nullptr;
 
-	//newGenome->copy(*this);
-
-	//newGenome->mWaypoints = this->mWaypoints;
-
 	return newGenome;
 }
 
@@ -82,15 +47,6 @@ void MyGenome::copy(const GAGenome& orig)
 	mID = origMyGenome->GetID();
 	mCurMatchesWon = 0;
 	mTotalMatchesWon = 0;
-	//mSdlClipRect = nullptr;
-	//mSdlCenterPoint = nullptr;
-	//mb2Body = nullptr;
-	//mAlleleSetArray = new GARealAlleleSetArray(*origMyGenome->GetAlleleSetArray());
-	//m1DArrayAlleleGenome = new GA1DArrayAlleleGenome<float>(*origMyGenome->Get1DArrayAlleleGenome());
-
-	// Copy parts of Ship
-	//mWaypoints.clear();
-	//mWaypoints = origMyGenome->mWaypoints;
 }
 
 void MyGenome::SetScore(float score)
@@ -113,7 +69,6 @@ void MyGenome::Init(GAGenome& genome)
 
 	MyGenome* myGenome = (MyGenome*)&genome;
 
-	//myGenome->mWaypoints.clear();
 	myGenome->ClearWaypoints();
 
 	for (int i = 0; i < myGenome->length()-1; i += 2)
@@ -127,8 +82,7 @@ void MyGenome::Init(GAGenome& genome)
 
 int MyGenome::Mutate(GAGenome& genome, float probability)
 {
-	// TODO: Implement functionality
-
+	//return mMutatorFunc(genome, probability);
 	return -1;
 }
 
@@ -158,50 +112,10 @@ float MyGenome::Evaluate(GAGenome& genome)
 int MyGenome::Cross(const GAGenome& _parent1, const GAGenome& _parent2,
 	GAGenome* _result1, GAGenome* _result2)
 {
-	// TODO: Fix so that offsprings randomly inherit attributes, etc,
-	// from both parents
-
 	MyGenome* _parent1MyGenome = (MyGenome*)&_parent1;
 	MyGenome* _parent2MyGenome = (MyGenome*)&_parent2;
 
 	int numOffspring = 0;
-
-	/*
-	GA1DArrayAlleleGenome<float>* allele1 = _parent1MyGenome->Get1DArrayAlleleGenome();
-	GA1DArrayAlleleGenome<float>* allele2 = _parent2MyGenome->Get1DArrayAlleleGenome();
-
-	int numOffspring = 0;
-
-	numOffspring = GA1DArrayGenome<float>::TwoPointCrossover((GAGenome)*_parent1MyGenome->Get1DArrayAlleleGenome(),
-		(GAGenome)*_parent2MyGenome->Get1DArrayAlleleGenome(), _result1, _result2);
-		*/
-
-	//std::cout << setArray.set(0) << "\n";
-	//std::cout << setArray.set(0).lower() << "\n";
-	//std::cout << setArray.set(0).upper() << "\n";
-	/*
-
-	MyGenome& parent1 = (MyGenome&)_parent1;
-	MyGenome& parent2 = (MyGenome&)_parent2;
-
-	int numOffspring = 0;
-
-	if (_result1)
-	{
-		MyGenome& result1 = (MyGenome&)* _result1;
-		result1.copy(parent1); // Only copy parts from parent1 here
-		result1.copy(parent2); // Only copy parts from parent2 here
-		numOffspring++;
-	}
-
-	if (_result2)
-	{
-		MyGenome& result2 = (MyGenome&)* _result2;
-		result2.copy(parent1); // Only copy parts from parent1 here
-		result2.copy(parent2); // Only copy parts from parent2 here
-		numOffspring++;
-	}
-	*/
 
 	return numOffspring;
 }

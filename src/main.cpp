@@ -11,7 +11,7 @@ of a continuous function in two variables.  This program uses a binary-to-
 decimal genome.
 */
 
-//#define INSTANTIATE_REAL_GENOME true
+//#include <ga/GARealGenome.C>
 
 #include <stdio.h>
 #include <iostream>
@@ -28,16 +28,15 @@ decimal genome.
 #include <SDL_ttf/SDL_ttf.h>
 #include <Box2D/Box2D.h>
 
-#include "MyGA.h"
-#include "Ship.h"
 #include "SDL_Wrapper.h"
 #include "World.h"
 #include "TextureManager.h"
 #include "MyB2DebugDraw.h"
 #include "MyB2ContactListener.h"
-#include "MyGenome.h"
 
 #include "Game.h"
+
+#define INSTANTIATE_REAL_GENOME true
 
 // Directories
 static const std::string dir_assets = "assets/";
@@ -50,6 +49,31 @@ static const std::string dir_textures = dir_assets;
 
 int main(int argc, char **argv)
 {
+	bool useCmdArguments = true;
+
+	float arg_speedup = 20.0f;
+	bool arg_doDraw = true;
+	bool arg_isGenomeTestRun = false;
+	std::string arg_fileName_Genes = "";
+
+	int arg_numGenerations = 5;
+	int arg_populationSize = 10;
+
+	if (useCmdArguments && argc < 7)
+	{
+		std::cout << "Usage: " << argv[0] << " SPEEDUP DRAW_FLAG RUN_NUM_GENERATIONS RUN_POPSIZE TESTRUN_FLAG TESTRUN_GENE_FILE" << "\n";
+		std::cout << "Press ENTER to exit...\n";
+		std::cin.get();
+		return -1;
+	}
+
+	arg_speedup = (float)std::atoi(argv[1]);
+	arg_doDraw = (std::atoi(argv[2]) != 0);
+	arg_numGenerations = std::atoi(argv[3]);
+	arg_populationSize = std::atoi(argv[4]);
+	arg_isGenomeTestRun = (std::atoi(argv[5]) != 0);
+	arg_fileName_Genes = argv[6];
+
 	srand(time(NULL));
 
 	GARandomSeed();
@@ -132,19 +156,101 @@ int main(int argc, char **argv)
 	Game* game = new Game(window, renderer, WINDOW_WIDTH, WINDOW_HEIGHT, box2Dworld, textureManager, font);
 	game->Init(dir_assets, dir_fonts, dir_textures);
 
-
-	float speedup = 10.0f;
 	bool steadyState = true;
-	int generations = 3;
-	int populationSize = 10;
-	int crossover = game->ONEPOINT;
+	int generations = arg_numGenerations;
+	int populationSize = arg_populationSize;
+	int crossover = Game::CROSSOVER_REAL_ONEPOINT;
 	float pMutate = 0.15f;
 	float pCrossover = 0.95f;
+	int mutatorType = Game::MUTATOR_REAL_GAUSSIAN;
+
+
+	float mScreenWidth = 800.0f;
+	float mScreenHeight = 600.0f;
+
+	GARealAlleleSetArray setArray;
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
+	setArray.add(0.0f, mScreenWidth);
+	setArray.add(0.0f, mScreenHeight);
+	setArray.add(0.1f, 0.9f);
 	
-	game->RunGA(dir_assets, dir_fonts, dir_textures, dt_fixed, speedup, steadyState, generations, populationSize, crossover, pMutate, pCrossover);
-	speedup = 20.0f;
-	pCrossover = 0.8f;
-	game->RunGA(dir_assets, dir_fonts, dir_textures, dt_fixed, speedup, steadyState, generations, populationSize, crossover, pMutate, pCrossover);
+	// Test genomes by running similar code as below
+	if (arg_isGenomeTestRun)
+	{
+		std::cout << "Running gene test\n";
+		std::vector<float> genes;
+		std::ifstream infile(arg_fileName_Genes);
+
+		float curGene = 0.0f;
+		double score = 0.0;
+
+		if (infile.is_open())
+		{
+			while (infile >> curGene)
+			{
+				genes.push_back(curGene);
+			}
+		}
+		else
+		{
+			std::cout << "Could not open file " << arg_fileName_Genes << "!\n";
+			std::cout << "Using random genes instead\n";
+
+			for (unsigned int i = 0; i < 9; i += 2)
+			{
+				genes.push_back(rand() % 800);
+				genes.push_back(rand() % 600);
+			}
+			genes.push_back(0.5f);
+
+		}
+
+		score = game->RunGenomeFromGeneSet(genes, dt_fixed, arg_speedup, arg_doDraw);
+
+		std::cout << "Gene test score: " << score << "\n";
+	}
+	else
+	{
+		unsigned int numIterations = 3;
+
+		std::cout << "Running normal version. Information:\n-----------------------------------------------\n";
+		std::cout << "Speedup: " << arg_speedup << "\n";
+		std::cout << "Generations: " << generations << "\nPopulation size: " << populationSize << "\n";
+		std::cout << "Crossover functions: " << "One point, two point & blend\n";
+		std::cout << "Mutation functions: " << "Swap, uniform & Gaussian\n";
+		std::cout << "Iterations: " << numIterations << "\n";
+		std::cout << "-----------------------------------------------\n";
+
+		for (unsigned int i = 0; i < 3; ++i)
+		{
+			for (unsigned int j = 0; j < 3; ++j)
+			{
+				for (unsigned int k = 0; k < numIterations; ++k)
+				{
+					game->RunGA(dir_assets, dir_fonts, dir_textures, dt_fixed, arg_speedup, steadyState, generations, populationSize, i, j, pMutate, pCrossover, k, arg_doDraw);
+				}
+			}
+		}
+
+		steadyState = false;
+		for (unsigned int i = 0; i < 3; ++i)
+		{
+			for (unsigned int j = 0; j < 3; ++j)
+			{
+				for (unsigned int k = 0; k < numIterations; ++k)
+				{
+					game->RunGA(dir_assets, dir_fonts, dir_textures, dt_fixed, arg_speedup, steadyState, generations, populationSize, i, j, pMutate, pCrossover, k, arg_doDraw);
+				}
+			}
+		}
+	}
 
 	gameIsRunning = true;
 

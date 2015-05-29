@@ -12,30 +12,34 @@
 
 #include "MyGenome.h"
 #include "Ship.h"
+#include "MyGA.h"
 
 class Game;
 
 typedef int(*CrossoverFunc)(const GAGenome&, const GAGenome&, GAGenome*, GAGenome*);
 
-class MyGA2 : public GASimpleGA
+class MyGA_Simple : public GASimpleGA
 {
 public:
 
-	MyGA2(const GAGenome& genome);
-	MyGA2(const GAPopulation& pop);
-	virtual ~MyGA2() {}
-	virtual void step(float dt_fixed, float& speedup);
+	MyGA_Simple(const GAGenome& genome);
+	MyGA_Simple(const GAPopulation& pop);
+	virtual ~MyGA_Simple() {}
+	virtual void step(float dt_fixed, float& speedup, bool doDraw);
 	//MyGA& operator++() { step(0.0f); return *this; }
 	void crossover(CrossoverFunc func);
 	void Init(Game* game, Ship* enemyShip);
 
-	double ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::system_clock::time_point& time_now, float speedup);
+	//double ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::system_clock::time_point& time_now, float speedup);
 
 	CrossoverFunc mCrossoverFunc;
 
+	const std::vector<float>& GetDiversities() const;
+
 protected:
 	Ship* mEnemyShip;
-	Game* mGame;
+	Game* mGame; 
+	std::vector<float> mDiversities;
 	//CrossoverFunc mCrossoverFunc;
 };
 

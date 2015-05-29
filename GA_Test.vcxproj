@@ -16,7 +16,7 @@
     <ClCompile Include="src\Entity.cpp" />
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\MyGA2.cpp" />
+    <ClCompile Include="src\MyGA_Simple.cpp" />
     <ClCompile Include="src\Ship.cpp" />
     <ClCompile Include="src\MyGA.cpp" />
     <ClCompile Include="src\MyGenome.cpp" />
@@ -31,7 +31,7 @@
     <ClInclude Include="src\Common.h" />
     <ClInclude Include="src\Entity.h" />
     <ClInclude Include="src\Game.h" />
-    <ClInclude Include="src\MyGA2.h" />
+    <ClInclude Include="src\MyGA_Simple.h" />
     <ClInclude Include="src\Ship.h" />
     <ClInclude Include="src\MyGA.h" />
     <ClInclude Include="src\MyGenome.h" />
@@ -82,6 +82,7 @@
     <IncludePath>External\include;$(IncludePath)</IncludePath>
     <ReferencePath>$(VC_ReferencesPath_x86);$(ProjectDir)</ReferencePath>
     <LibraryPath>External\lib\x86;$(LibraryPath)</LibraryPath>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -94,6 +95,7 @@
       <AdditionalDependencies>ga_d.lib;SDL2.lib;SDL2main.lib;Box2D_d.lib;SDL2_image.lib;SDL2_ttf.lib;SDL2_gfx_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
       <ShowProgress>NotSet</ShowProgress>
+      <AdditionalOptions>/FORCE:MULTIPLE %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /d /y "$(ProjectDir)External\Lib\x86\dll_d\*.*" "$(OutDir)"</Command>
@@ -103,9 +105,10 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -113,6 +116,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>ga.lib;SDL2.lib;SDL2main.lib;Box2D.lib;SDL2_image.lib;SDL2_ttf.lib;SDL2_gfx.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
+      <AdditionalOptions>/FORCE:MULTIPLE %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /d /y "$(ProjectDir)External\Lib\x86\dll\*.*" "$(OutDir)"</Command>

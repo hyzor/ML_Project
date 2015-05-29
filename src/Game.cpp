@@ -1,11 +1,13 @@
 #include "Game.h"
 
 #include "MyGA.h"
-#include "MyGA2.h"
+#include "MyGA_Simple.h"
 
 #include <sstream>
 #include <iostream>
 #include <fstream>
+
+#include <ga/GARealGenome.C>
 
 Game::Game()
 {
@@ -75,9 +77,10 @@ bool Game::Init(std::string assetsDir, std::string fontsDir, std::string texture
 	return true;
 }
 
-void Game::RunGA(std::string assetsDir, std::string fontsDir, std::string texturesDir, double dt_fixed, float speedup, bool steadyState, int generations, int populationSize, int crossover, float pCross, float pMut)
+void Game::RunGA(std::string assetsDir, std::string fontsDir, std::string texturesDir,
+	double dt_fixed, float speedup, bool steadyState,
+	int generations, int populationSize, int crossover, int mutatorType, float pCross, float pMut, int iteration, bool doDraw)
 {
-
 	GARealAlleleSetArray setArray;
 	setArray.add(0.0f, mScreenWidth);
 	setArray.add(0.0f, mScreenHeight);
@@ -98,11 +101,22 @@ void Game::RunGA(std::string assetsDir, std::string fontsDir, std::string textur
 
 	int popSize = populationSize;
 
+	MyGenome::Mutator mutatorFunc = (GAGenome::Mutator)0;
+
+	if (mutatorType == Game::MUTATOR_REAL_SWAP)
+		mutatorFunc = GARealSwapMutator;
+	else if (mutatorType == Game::MUTATOR_REAL_GAUSSIAN)
+		mutatorFunc = GARealGaussianMutator;
+	else
+		mutatorFunc = GARealUniformMutator;
+
 	MyGenome* myGenome1;
-		for (int i = 0; i < popSize; i++){
-			myGenome1 = new MyGenome(1, setArray, 48.0f*0.5f, 64.0f*0.5f, 48, 64, 5, 1, 0.0f, mTextureManager->LoadTexture("Ship.png"), MyGenome::Evaluate);
-			mGaPop->add(myGenome1);
-		}
+	for (int i = 0; i < popSize; i++)
+	{
+		myGenome1 = new MyGenome(1, setArray, 48.0f*0.5f, 64.0f*0.5f, 48, 64, 5, 1, 0.0f, mTextureManager->LoadTexture("Ship.png"), MyGenome::Evaluate, mutatorFunc);
+		mGaPop->add(myGenome1);
+
+	}
 
 	for (int i = 0; i < mGaPop->size(); ++i)
 	{
@@ -110,49 +124,57 @@ void Game::RunGA(std::string assetsDir, std::string fontsDir, std::string textur
 		myGenome->initialize();
 	}
 
-	if (steadyState){
+	if (steadyState)
+	{
 		mGA = new MyGA(*mGaPop);
-		if (crossover == Crossover::ONEPOINT)
-			((MyGA*)mGA)->crossover(MyGenome::OnePointCrossover);
-		if (crossover == Crossover::TWOPOINT)
-			((MyGA*)mGA)->crossover(MyGenome::TwoPointCrossover);
 
-
+		if (crossover == Crossover::CROSSOVER_REAL_ONEPOINT)
+			((MyGA*)mGA)->crossover(GARealOnePointCrossover);
+		else if (crossover == Crossover::CROSSOVER_REAL_TWOPOINT)
+			((MyGA*)mGA)->crossover(GARealTwoPointCrossover);
+		else
+			((MyGA*)mGA)->crossover(GARealBlendCrossover);
 	}
-	else{
+	else
+	{
+		mGA = new MyGA_Simple(*mGaPop);
 
-		mGA = new MyGA2(*mGaPop);
-		if (crossover == Crossover::ONEPOINT)
-			((MyGA2*)mGA)->crossover(MyGenome::OnePointCrossover);
-		if (crossover == Crossover::TWOPOINT)
-			((MyGA2*)mGA)->crossover(MyGenome::TwoPointCrossover);
-
+		if (crossover == Crossover::CROSSOVER_REAL_ONEPOINT)
+			((MyGA_Simple*)mGA)->crossover(GARealOnePointCrossover);
+		else if (crossover == Crossover::CROSSOVER_REAL_TWOPOINT)
+			((MyGA_Simple*)mGA)->crossover(GARealTwoPointCrossover);
+		else
+			((MyGA_Simple*)mGA)->crossover(GARealBlendCrossover);
 	}
+
+	mGA->selector(*new GARouletteWheelSelector);
 	mGA->nGenerations(generations);
 	mGA->pMutation(pMut);
 	mGA->pCrossover(pCross);
 	mGA->scoreFilename("GA_score.dat");
 	mGA->scoreFrequency(1);
-	mGA->flushFrequency(1);
+	//mGA->flushFrequency(generations);
 	mGA->selectScores(GAStatistics::AllScores);
 	mGA->recordDiversity(gaTrue);
 
-	if (steadyState){
+	if (steadyState)
+	{
 		((MyGA*)mGA)->Init(this, enemyShip);
 		((MyGA*)mGA)->nReplacement(popSize - 1); // if GASteadyStateGA
 	}
-	else{
-		((MyGA2*)mGA)->Init(this, enemyShip);
-		((MyGA2*)mGA)->elitist(gaTrue); // if GASimpleGA
-
-		}
+	else
+	{
+		((MyGA_Simple*)mGA)->Init(this, enemyShip);
+		((MyGA_Simple*)mGA)->elitist(gaTrue); // if GASimpleGA
+	}
 	
-	std::cout << "Initial genomes:\n";
+	//std::cout << "Initial genomes:\n";
 	for (int i = 0; i < mGA->populationSize(); ++i)
 	{
 		MyGenome* genome = (MyGenome*)&mGA->population().individual(i);
 
 		MyGenome::Init(*genome);
+
 		genome->Init_b2(GetWorld()->Getb2World(), false, Entity::Type::SHIP, genome->gene(genome->length()-1));
 		genome->Init_SDL();
 		genome->SetType(Entity::Type::SHIP);
@@ -162,6 +184,7 @@ void Game::RunGA(std::string assetsDir, std::string fontsDir, std::string textur
 		((Ship*)genome)->Reset();
 		genome->Setb2BodyType(b2_staticBody);
 
+		/*
 		std::cout << genome->GetID() << ": ";
 
 		for (int j = 0; j < genome->length(); ++j)
@@ -170,23 +193,20 @@ void Game::RunGA(std::string assetsDir, std::string fontsDir, std::string textur
 		}
 
 		std::cout << " Score: " << genome->score() << "\n";
+		*/
 	}
-
-	MyGenome* testGenome = (MyGenome*)&mGA->population().individual(0);
-
-	testGenome->Setb2BodyType(b2_dynamicBody);
-	testGenome->SetCollisionEnabled(true);
 	
 
 	// Evolve by explicitly calling the GA step function
 	while (!mGA->done())
 	{
 		if (steadyState)
-			((MyGA*)mGA)->step(dt_fixed, speedup);
+			((MyGA*)mGA)->step(dt_fixed, speedup, doDraw);
 		else
-			((MyGA2*)mGA)->step(dt_fixed, speedup);
+			((MyGA_Simple*)mGA)->step(dt_fixed, speedup, doDraw);
 	}
 
+	/*
 	std::cout << "\n-----------------------\n\n";
 
 	std::cout << "Genomes: \n";
@@ -202,8 +222,10 @@ void Game::RunGA(std::string assetsDir, std::string fontsDir, std::string textur
 
 		std::cout << " Score: " << genome->score() << "\n";
 	}
+	*/
 
 
+	/*
 	std::cout << "\n";
 
 	// Dump the results of the GA to the screen.
@@ -213,29 +235,68 @@ void Game::RunGA(std::string assetsDir, std::string fontsDir, std::string textur
 	{
 		std::cout << genome->gene(i) << "\n";
 	}
+	*/
 
-	std::cout << "The best individual is genome " << genome->GetID() << "\n";
-	std::cout << "Best of generation data is in file '" << mGA->scoreFilename() << "'\n";
+	//std::cout << "The best individual is genome " << genome->GetID() << "\n";
+	//std::cout << "Best of generation data is in file '" << mGA->scoreFilename() << "'\n";
 
+	MyGenome* genome = (MyGenome*)&mGA->statistics().bestIndividual();
 
 	std::stringstream sstm;
-	sstm << "results-" << mGA->nGenerations() << "-gen-" << mGA->populationSize() << "-popsize-"<< "-pMut-" << pMut << "-pCross-" << pCross <<  ".txt";
+
+	sstm << (steadyState ? "SteadyState_" : "Elitism_");
+
+	if (crossover == Crossover::CROSSOVER_REAL_ONEPOINT)
+		sstm << "CROSS-OnePoint_";
+	else if (crossover == Crossover::CROSSOVER_REAL_TWOPOINT)
+		sstm << "CROSS-TwoPoint_";
+	else
+		sstm << "CROSS-Blend_";
+
+	if (mutatorType == MutationTypes::MUTATOR_REAL_SWAP)
+		sstm << "MUTATOR-Swap_";
+	else if (mutatorType == MutationTypes::MUTATOR_REAL_UNIFORM)
+		sstm << "MUTATOR-Uniform_";
+	else
+		sstm << "MUTATOR-Gaussian_";
+
+	sstm << "NumGen-" << mGA->nGenerations() << "_PopSize-" << mGA->populationSize() << "_pMut-" << pMut << "_pCross-" << pCross << "_It-" << iteration << ".txt";
+
 	std::string str = sstm.str();
-	const char * c = str.c_str();
+	const char* c = str.c_str();
 
 	std::ofstream file(c);
 
 	// Dump statistics
 	file << mGA->statistics() << "\n";
-	file << "Best genome: ";
+	file << "Best genome:\n";
 
 	for (int i = 0; i < genome->length(); ++i)
 	{
-		file << genome->gene(i) << ", ";
+		file << genome->gene(i) << "\n";
 	}
+
+	file << "\nDiversities: \n";
+
+	if (steadyState)
+	{
+		for (unsigned int i = 0; i < ((MyGA*)mGA)->GetDiversities().size(); ++i)
+		{
+			file << ((MyGA*)mGA)->GetDiversities()[i] << "\n";
+		}
+	}
+	else
+	{
+		for (unsigned int i = 0; i < ((MyGA_Simple*)mGA)->GetDiversities().size(); ++i)
+		{
+			file << ((MyGA_Simple*)mGA)->GetDiversities()[i] << "\n";
+		}
+	}
+
 	file.close();
 
-	std::cout << mGA->statistics() << "\n";
+	//std::cout << mGA->statistics() << "\n";
+	std::cout << "\nFINISHED! Flushing to file:\n" << str << "\n";
 
 	if (mGaPop)
 	{
@@ -294,6 +355,35 @@ void Game::Reset()
 
 }
 
+
+double Game::RunGenomeFromGeneSet(std::vector<float>& geneSet, float dt_fixed, float speedup, bool doDraw)
+{
+	GARealAlleleSetArray setArray;
+
+	for (unsigned int i = 0; i < geneSet.size(); ++i)
+	{
+		setArray.add(0.0f, 0.0f);
+	}
+
+	MyGenome* genome = new MyGenome(1, setArray, 48.0f*0.5f, 64.0f*0.5f, 48, 64, 5, 1, 0.0f, mTextureManager->LoadTexture("Ship.png"), MyGenome::Evaluate);
+
+	for (unsigned int i = 0; i < geneSet.size(); ++i)
+	{
+		genome->gene(i, geneSet[i]);
+	}
+
+	MyGenome::Init(*genome);
+	genome->initialize();
+	genome->Init_b2(GetWorld()->Getb2World(), false, Entity::Type::SHIP, genome->gene(genome->length() - 1));
+	genome->Init_SDL();
+	genome->SetType(Entity::Type::SHIP);
+	genome->Reset();
+	((Ship*)genome)->Reset();
+	genome->Setb2BodyType(b2_dynamicBody);
+	genome->SetCollisionEnabled(true);
+
+	return MyGA::ObjectiveFunction(genome, dt_fixed, std::chrono::system_clock::now(), speedup, this, enemyShip, doDraw);
+}
 
 void Game::DoPhysicsStep(float dt, int b2VelIterations, int b2PosIterations)
 {
