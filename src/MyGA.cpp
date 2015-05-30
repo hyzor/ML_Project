@@ -26,6 +26,8 @@ void MyGA::step(float dt_fixed, float& speedup, bool doDraw)
 		parent1 = &(pop->select());
 		parent2 = &(pop->select());
 		stats.numsel += 2;
+		
+		MyGenome* myGenome = (MyGenome*)&tmpPop->individual(i);
 
 		// Perform crossover with some probability
 		if (GAFlipCoin(pCrossover()))

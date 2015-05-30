@@ -110,18 +110,25 @@ void Game::RunGA(std::string assetsDir, std::string fontsDir, std::string textur
 	else
 		mutatorFunc = GARealUniformMutator;
 
-	MyGenome* myGenome1;
+	MyGenome* myGenome1 = nullptr;
 	for (int i = 0; i < popSize; i++)
 	{
 		myGenome1 = new MyGenome(1, setArray, 48.0f*0.5f, 64.0f*0.5f, 48, 64, 5, 1, 0.0f, mTextureManager->LoadTexture("Ship.png"), MyGenome::Evaluate, mutatorFunc);
-		mGaPop->add(myGenome1);
 
+		myGenome1->mFireRateGene = &myGenome1->gene(myGenome1->length() - 1);
+		mGaPop->add(myGenome1);
 	}
 
 	for (int i = 0; i < mGaPop->size(); ++i)
 	{
 		MyGenome* myGenome = (MyGenome*)&mGaPop->individual(i);
 		myGenome->initialize();
+
+		for (int j = 0; j < myGenome->length() - 1; ++j)
+			myGenome->MapGene(&myGenome->gene(j), MyGenome::GENE_TYPES::WAYPOINT);
+
+		myGenome->MapGene(&myGenome->gene(myGenome->length() - 1), MyGenome::GENE_TYPES::FIRE_RATE);
+		//myGenome->mFireRateGene = &myGenome->gene(myGenome->length() - 1);
 	}
 
 	if (steadyState)
@@ -173,6 +180,11 @@ void Game::RunGA(std::string assetsDir, std::string fontsDir, std::string textur
 	{
 		MyGenome* genome = (MyGenome*)&mGA->population().individual(i);
 
+		for (int j = 0; j < genome->length() - 1; ++j)
+			genome->MapGene(&genome->gene(j), MyGenome::GENE_TYPES::WAYPOINT);
+
+		genome->MapGene(&genome->gene(genome->length() - 1), MyGenome::GENE_TYPES::FIRE_RATE);
+
 		MyGenome::Init(*genome);
 
 		genome->Init_b2(GetWorld()->Getb2World(), false, Entity::Type::SHIP, genome->gene(genome->length()-1));
@@ -196,6 +208,7 @@ void Game::RunGA(std::string assetsDir, std::string fontsDir, std::string textur
 		*/
 	}
 	
+	//myGenome1->mFireRateGene = &myGenome1->gene(myGenome1->length()-1);
 
 	// Evolve by explicitly calling the GA step function
 	while (!mGA->done())

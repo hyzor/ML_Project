@@ -9,6 +9,24 @@
 class MyGenome : public Ship, public GARealGenome
 {
 public:
+	static enum GENE_TYPES
+	{
+		WAYPOINT,
+		FIRE_RATE
+	};
+
+	static struct MyGene
+	{
+		MyGene(const float* _value, int _type)
+		{
+			value = _value;
+			type = _type;
+		}
+
+		const float* value;
+		int type;
+	};
+
 	// Default genome functions/operators definitions
 public:
 	static void Init(GAGenome&);
@@ -37,6 +55,8 @@ public:
 	int GetID() const;
 	GABoolean IsEvaluated() const;
 
+	void MapGene(const float* gene, int type);
+
 	void Reset();
 	
 public:
@@ -44,6 +64,10 @@ public:
 	int mTotalMatchesWon;
 	int mCurMatchesWon;
 	float mScore;
+
+	const float* mFireRateGene;
+
+	std::vector<MyGene> mGenes;
 
 protected:
 	int mID;

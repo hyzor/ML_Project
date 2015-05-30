@@ -49,7 +49,7 @@ static const std::string dir_textures = dir_assets;
 
 int main(int argc, char **argv)
 {
-	bool useCmdArguments = true;
+	bool useCmdArguments = false;
 
 	float arg_speedup = 20.0f;
 	bool arg_doDraw = true;
@@ -67,12 +67,15 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	arg_speedup = (float)std::atoi(argv[1]);
-	arg_doDraw = (std::atoi(argv[2]) != 0);
-	arg_numGenerations = std::atoi(argv[3]);
-	arg_populationSize = std::atoi(argv[4]);
-	arg_isGenomeTestRun = (std::atoi(argv[5]) != 0);
-	arg_fileName_Genes = argv[6];
+	if (useCmdArguments)
+	{
+		arg_speedup = (float)std::atoi(argv[1]);
+		arg_doDraw = (std::atoi(argv[2]) != 0);
+		arg_numGenerations = std::atoi(argv[3]);
+		arg_populationSize = std::atoi(argv[4]);
+		arg_isGenomeTestRun = (std::atoi(argv[5]) != 0);
+		arg_fileName_Genes = argv[6];
+	}
 
 	srand(time(NULL));
 
@@ -160,8 +163,8 @@ int main(int argc, char **argv)
 	int generations = arg_numGenerations;
 	int populationSize = arg_populationSize;
 	int crossover = Game::CROSSOVER_REAL_ONEPOINT;
-	float pMutate = 0.15f;
-	float pCrossover = 0.95f;
+	float pMutate = 1.0f;
+	float pCrossover = 1.0f;
 	int mutatorType = Game::MUTATOR_REAL_GAUSSIAN;
 
 

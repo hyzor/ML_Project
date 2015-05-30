@@ -33,6 +33,13 @@ GAGenome* MyGenome::clone(CloneMethod) const
 	newGenome->mSdlClipRect = nullptr;
 	newGenome->mSdlCenterPoint = nullptr;
 
+	newGenome->mGenes.clear();
+
+	//for (unsigned int i = 0; i < mGenes.size(); ++i)
+	//{
+		//newGenome->mGenes.push_back(mGenes[i]);
+	//}
+
 	return newGenome;
 }
 
@@ -47,6 +54,13 @@ void MyGenome::copy(const GAGenome& orig)
 	mID = origMyGenome->GetID();
 	mCurMatchesWon = 0;
 	mTotalMatchesWon = 0;
+
+	mGenes.clear();
+
+	//for (unsigned int i = 0; i < origMyGenome->mGenes.size(); ++i)
+	//{
+		//mGenes.push_back(origMyGenome->mGenes[i]);
+	//}
 }
 
 void MyGenome::SetScore(float score)
@@ -71,10 +85,44 @@ void MyGenome::Init(GAGenome& genome)
 
 	myGenome->ClearWaypoints();
 
+	for (unsigned int i = 0; i < myGenome->mGenes.size()-1; i++)
+	{
+		myGenome->AddWaypoint(b2Vec2(*myGenome->mGenes[i].value*Box2dHelper::Units, *myGenome->mGenes[i + 1].value*Box2dHelper::Units));
+		i += 1;
+		/*
+		if (myGenome->mGenes[i].type == GENE_TYPES::WAYPOINT && myGenome->mGenes[i+1].type == GENE_TYPES::WAYPOINT)
+		{
+			myGenome->AddWaypoint(b2Vec2(*myGenome->mGenes[i].value*Box2dHelper::Units, *myGenome->mGenes[i+1].value*Box2dHelper::Units));
+			i += 1;
+		}
+		else if (myGenome->mGenes[i].type == GENE_TYPES::WAYPOINT)
+		{
+			MyGene* geneX = &myGenome->mGenes[i];
+			MyGene* geneY = nullptr;
+
+			do
+			{
+				i += 1;
+				MyGene* curGene = &myGenome->mGenes[i];
+				if (curGene->type == GENE_TYPES::WAYPOINT)
+					geneY = curGene;
+
+			} while (geneY == nullptr && i < myGenome->mGenes.size() - 1);
+
+			if (geneY)
+			{
+				myGenome->AddWaypoint(b2Vec2(*geneX->value*Box2dHelper::Units, *geneY->value*Box2dHelper::Units));
+			}
+		}
+		*/
+	}
+
+	/*
 	for (int i = 0; i < myGenome->length()-1; i += 2)
 	{
 		myGenome->AddWaypoint(b2Vec2(myGenome->gene(i)*Box2dHelper::Units, myGenome->gene(i+1)*Box2dHelper::Units));
 	}
+	*/
 
 	if (myGenome->mWaypoints.size() > 0)
 		myGenome->mCurWaypoint = myGenome->mWaypoints.front();
@@ -128,6 +176,11 @@ int MyGenome::GetID() const
 GABoolean MyGenome::IsEvaluated() const
 {
 	return _evaluated;
+}
+
+void MyGenome::MapGene(const float* gene, int type)
+{
+	mGenes.push_back(MyGene(gene, type));
 }
 
 void MyGenome::Reset()
