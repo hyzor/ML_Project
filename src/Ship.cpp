@@ -609,6 +609,9 @@ bool Ship::Init_b2(b2World* world, bool isBullet, unsigned int type, float senso
 
 	if (sensorGene != 0.0f)
 	{
+		if (sensorGene > 0.9f)
+			sensorGene = std::fmod(sensorGene, 0.9f);
+
 		sensorAngle = sensorAngle * sensorGene;
 		mCooldown = 2.0f * mBaseCooldown * (1.0f - sensorGene);
 	}

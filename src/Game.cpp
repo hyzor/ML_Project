@@ -296,7 +296,7 @@ void Game::RunGA(std::string assetsDir, std::string fontsDir, std::string textur
 	file.close();
 
 	//std::cout << mGA->statistics() << "\n";
-	std::cout << "\nFINISHED! Flushing to file:\n" << str << "\n";
+	std::cout << "\nFinished current run! Flushing data to file:\n" << str << "\n";
 
 	if (mGaPop)
 	{

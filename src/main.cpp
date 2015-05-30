@@ -59,20 +59,23 @@ int main(int argc, char **argv)
 	int arg_numGenerations = 5;
 	int arg_populationSize = 10;
 
-	if (useCmdArguments && argc < 7)
+	if (useCmdArguments)
 	{
-		std::cout << "Usage: " << argv[0] << " SPEEDUP DRAW_FLAG RUN_NUM_GENERATIONS RUN_POPSIZE TESTRUN_FLAG TESTRUN_GENE_FILE" << "\n";
-		std::cout << "Press ENTER to exit...\n";
-		std::cin.get();
-		return -1;
-	}
+		if (argc < 7)
+		{
+			std::cout << "Usage: " << argv[0] << " SPEEDUP DRAW_FLAG RUN_NUM_GENERATIONS RUN_POPSIZE TESTRUN_FLAG TESTRUN_GENE_FILE" << "\n";
+			std::cout << "Press ENTER to exit...\n";
+			std::cin.get();
+			return -1;
+		}
 
-	arg_speedup = (float)std::atoi(argv[1]);
-	arg_doDraw = (std::atoi(argv[2]) != 0);
-	arg_numGenerations = std::atoi(argv[3]);
-	arg_populationSize = std::atoi(argv[4]);
-	arg_isGenomeTestRun = (std::atoi(argv[5]) != 0);
-	arg_fileName_Genes = argv[6];
+		arg_speedup = (float)std::atoi(argv[1]);
+		arg_doDraw = (std::atoi(argv[2]) != 0);
+		arg_numGenerations = std::atoi(argv[3]);
+		arg_populationSize = std::atoi(argv[4]);
+		arg_isGenomeTestRun = (std::atoi(argv[5]) != 0);
+		arg_fileName_Genes = argv[6];
+	}
 
 	srand(time(NULL));
 
@@ -250,6 +253,9 @@ int main(int argc, char **argv)
 				}
 			}
 		}
+
+		std::cout << "All runs have finished!\n";
+		std::cout << "Proceeding to exit...\n";
 	}
 
 	gameIsRunning = true;
