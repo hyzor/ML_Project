@@ -144,6 +144,7 @@ double MyGA::ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::s
 	std::chrono::duration<double> time_since_start;
 
 	int physicsIterations = 0;
+	double frametime_accumulator = 0.0;
 
 	while (gameIsRunning && time < 25.0 && myGenome->IsAlive() && enemyShip->IsAlive())
 	{
@@ -154,13 +155,18 @@ double MyGA::ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::s
 		std::chrono::duration<double> frame_diff = time_new - time_now;
 		double frametime = frame_diff.count();
 
+		frametime *= (double)speedup;
+
+		if (frametime > 0.75)
+		{
+			frametime_accumulator += frametime - 0.75;
+			frametime = 0.75;
+		}
+			
+
 		//frametime = std::min(dt_fixed*speedup, 0.25f);
 
 		//frametime = std::chrono::duration_cast<std::chrono::milliseconds>(frame_diff).count();
-		frametime *= (double)speedup;
-
-		if (frametime > 1.0)
-			frametime = 1.0;
 
 		time_now = time_new;
 		
@@ -219,7 +225,10 @@ double MyGA::ObjectiveFunction(GAGenome* genome, double dt_fixed, std::chrono::s
 
 	//std::cout << myGenome->GetHealth() << " " << enemyShip->GetHealth() << "\n";
 
-	double score = (double)(myGenome->GetHealth_Init() + myGenome->GetHealth() - enemyShip->GetHealth()) + ((float)iterations * 0.01f);
+	//float score_time = ((float)iterations*speedup) * 0.01f;
+	float score_time = (float)time * 0.1f;
+
+	double score = (double)(myGenome->GetHealth_Init() + myGenome->GetHealth() - enemyShip->GetHealth()) + score_time;
 
 	if (score < 0.0)
 		score = 0.0;

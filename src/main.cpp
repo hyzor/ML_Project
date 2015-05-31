@@ -51,10 +51,10 @@ int main(int argc, char **argv)
 {
 	bool useCmdArguments = true;
 
-	float arg_speedup = 20.0f;
+	float arg_speedup = 5.0f;
 	bool arg_doDraw = true;
 	bool arg_isGenomeTestRun = false;
-	std::string arg_fileName_Genes = "";
+	std::string arg_fileName_Genes = "geneFile.txt";
 
 	int arg_numGenerations = 5;
 	int arg_populationSize = 10;
@@ -218,6 +218,8 @@ int main(int argc, char **argv)
 		score = game->RunGenomeFromGeneSet(genes, dt_fixed, arg_speedup, arg_doDraw);
 
 		std::cout << "Gene test score: " << score << "\n";
+		std::cout << "Press ENTER to exit...\n";
+		std::cin.get();
 	}
 	else
 	{
